@@ -12,12 +12,12 @@ EYE_connected = true;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
-SAVE_RAW_DATA = false;
-SAVE_EPOCHED_DATA = false;
+SAVE_RAW_DATA = true;
+SAVE_EPOCHED_DATA = true;
 PLOTS = false;
 
 EPOCHED_VERSION = 3; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '11';
+SUBJECT_ID = '100';
 BLOCK = '1'; % First block in batch
 nBLOCKS = 2; % Number of blocks to do in batch
 
@@ -235,6 +235,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     Pupil.processed = zeros(trials_per_block, round(freq_eye * 4) + 1);
     Pupil.baseline = 0;
 
+    EEG = struct;
     EEG.epoch = zeros(64, round(freq_eeg * 1.5) + 1);
     EEG.baseline = zeros(64, 1);
     EEG.filtered = zeros(64, round(freq_eeg * 1.5) + 1);
@@ -623,13 +624,13 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     %% Save Data
     fprintf('\n')
     if SAVE_RAW_DATA
-        % Convert data to the storage format
-        eye.time_series = eye_data;
-        eye.time_stamps = eye_ts;
-        unity.time_series = unity_data;
-        unity.time_stamps = unity_ts;
-        eeg.time_series = [zeros(1, length(eeg_ts)); eeg_data];
-        eeg.time_stamps = eeg_ts;
+        % Convert data to the storage format and trim the trailing zeros
+        % from initialization
+        [eye.time_series, eye.time_stamps] = trimExcess(eye_data,eye_ts);
+        [unity.time_series, unity.time_stamps] = trimExcess(unity_data,unity_ts);
+        [eeg.time_series, eeg.time_stamps] = trimExcess(eeg_data,eeg_ts);
+        eeg.time_series = [zeros(1, length(eeg.time_stamps)); eeg.time_series];
+        
         % Create directory for raw data of this subject
         if ~ exist(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat',['subject_' SUBJECT_ID]))
             mkdir(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat',['subject_' SUBJECT_ID]));

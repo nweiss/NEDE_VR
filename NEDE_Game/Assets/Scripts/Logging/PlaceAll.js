@@ -119,7 +119,7 @@ function Start () {
 //	} else {
 //		Debug.Log('Only one display detected');
 //	}
-	var LSLdata = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+	var LSLdata = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
 	Debug.Log("Start Cue Sent");
 	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
     //====================================
