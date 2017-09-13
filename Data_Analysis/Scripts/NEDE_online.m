@@ -5,10 +5,10 @@ clc; clear all; close all;
 
 %% Settings
 % Specify which systems are connected
-UNITY = false;
+UNITY = true;
 PYTHON = false;
-EEG_connected = false;
-EYE_connected = false;
+EEG_connected = true;
+EYE_connected = true;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
@@ -17,11 +17,11 @@ SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 3; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '100';
-BLOCK = '7'; % First block in batch
-nBLOCKS = 1; % Number of blocks to do in batch
+SUBJECT_ID = '11';
+BLOCK = '1'; % First block in batch
+nBLOCKS = 2; % Number of blocks to do in batch
 
-EEG_WARNING_THRESHOLD = 300; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
+EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
 %% Set Paths and Load Data for Simulation Mode
 % Add path to where functions live
@@ -154,16 +154,16 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     
     % Look for cue to start a new block from unity
     if UNITY
-        disp('Waiting for start cue from unity...');
-        while true
-            [a, b] = inlet_unity.pull_sample(0);
-            if ~isempty(a)
-                if a(end) == 1
-                    disp('Start cue from Unity received!')
-                    break
-                end
-            end
-        end
+%         disp('Waiting for start cue from unity...');
+%         while true
+%             [a, b] = inlet_unity.pull_sample(0);
+%             if ~isempty(a)
+%                 if a(end) == 1
+%                     disp('Start cue from Unity received!')
+%                     break
+%                 end
+%             end
+%         end
     end
     BLOCK = num2str(block_counter);
     disp(['***STARTING BLOCK ', BLOCK,'***']);
@@ -631,11 +631,11 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         eeg.time_series = [zeros(1, length(eeg_ts)); eeg_data];
         eeg.time_stamps = eeg_ts;
         % Create directory for raw data of this subject
-        if ~ exist(fullfile('..','Data','raw_mat',['subject_' SUBJECT_ID]))
-            mkdir(fullfile('..','Data','raw_mat',['subject_' SUBJECT_ID]));
+        if ~ exist(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat',['subject_' SUBJECT_ID]))
+            mkdir(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat',['subject_' SUBJECT_ID]));
             disp(['New directory created for raw data for subject ' SUBJECT_ID])
         end
-        SAVE_PATH_RAW = fullfile('..','Data','raw_mat', ['subject_' SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
+        SAVE_PATH_RAW = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat', ['subject_' SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
         save(SAVE_PATH_RAW, 'eye', 'unity', 'eeg')
         disp('Saved raw data!')
     end
@@ -655,7 +655,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         stimulus_type = Billboard.stimulus_type;
         billboard_cat = Billboard.category;
         target_category = target_category * ones(1,length(stimulus_type));
-        SAVE_PATH_EPOCHED = fullfile('..','Data',['epoched_v' num2str(EPOCHED_VERSION)], ['subject_' SUBJECT_ID], ['s', SUBJECT_ID,'_b' BLOCK, '_epoched.mat']); %the path to where the raw data is stored.
+        SAVE_PATH_EPOCHED = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)], ['subject_' SUBJECT_ID], ['s', SUBJECT_ID,'_b' BLOCK, '_epoched.mat']); %the path to where the raw data is stored.
         save(SAVE_PATH_EPOCHED,'EEG','pupil','dwell_times','stimulus_type', 'head_rotation', 'billboard_cat', 'target_category');
         disp('Saved epoched data!')
     end
