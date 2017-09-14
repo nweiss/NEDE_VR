@@ -17,9 +17,10 @@ SINGLE_TRIAL_FEEDBACK = True
 BLOCK_PREDICTION = True
 SUBJECT_ID = '8'
 BLOCK = '107'
+EPOCH_VERSION = '3'
 TRAINING = False
 
-directory = 'Data/subject_' + SUBJECT_ID
+directory = '../../../Dropbox/NEDE_Dropbox/Data/epoched_v' + EPOCH_VERSION + '/subject_' + SUBJECT_ID
 filepath = directory + '/s' + SUBJECT_ID + '_b' + BLOCK + '_epoched.mat'
 
 # Check that the file paths are correct
@@ -172,6 +173,14 @@ print('Number of targets observed: %d' %np.sum(stimulus_type == 1))
 
 # Save data
 if SAVE_DATA:
+    # Check that you are not overwriting existing data
+    if os.path.isfile(filepath):
+        raise Exception('Data file already exists. Update subject and block number.')
+    
+    # If the directory does not already exist, create it
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+        
     target_cat = target_cat * np.ones((len(stimulus_type)))
     scipy.io.savemat(filepath, {'EEG': eeg, 'stimulus_type': stimulus_type, 'billboard_id': billboard_id,'dwell_times': dwell_time, 'pupil': pupil, 'head_rotation': head_rotation, 'billboard_cat': billboard_cat, 'target_category': target_cat, 'classification': classification, 'confidence': confidence})
     print('Data Saved')

@@ -53,8 +53,8 @@ freq_eeg = 2048;
 n_block_start_cues = 0;
 
 % Thresholds for pupil radius to be considered valid data
-blink_upper_thresh = 3;
-blink_lower_thresh = 1.5;
+blink_upper_thresh = 3.2;
+blink_lower_thresh = 1.3;
 
 %% Create Filters
 % High Pass Filter for EEG
@@ -476,6 +476,11 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 Pupil.baseline = mean(Pupil.avg(1:floor(freq_eye * 1)));
                 Pupil.processed(counter_epoch,:) = Pupil.avg - Pupil.baseline;
                 
+                % Warn experimenter if getting empty pupil vectors
+                if ~any(Pupil.processed)
+                    disp('WARNING: Got an empty pupil vector for last trial. Consider modifying blink_lower_thresh and blink_upper_thresh.') 
+                end
+                
                 %% Process head rotation data
                 % The rotation of the oculus that is recorded is the rotation
                 % relative to the rotation of the car. Correct for that.
@@ -624,19 +629,24 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     %% Save Data
     fprintf('\n')
     if SAVE_RAW_DATA
-        % Convert data to the storage format and trim the trailing zeros
-        % from initialization
+        % Convert data to storage format and trim trailing zeros from initialization
         [eye.time_series, eye.time_stamps] = trimExcess(eye_data,eye_ts);
         [unity.time_series, unity.time_stamps] = trimExcess(unity_data,unity_ts);
         [eeg.time_series, eeg.time_stamps] = trimExcess(eeg_data,eeg_ts);
         eeg.time_series = [zeros(1, length(eeg.time_stamps)); eeg.time_series];
         
+        % Check that you are not overwriting existing data file
+        SAVE_PATH_RAW = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat', ['subject_' SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
+        if exist(SAVE_PATH_RAW)==2
+            error('Data file already exists. Update subject and block number.') 
+        end
+
         % Create directory for raw data of this subject
-        if ~ exist(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat',['subject_' SUBJECT_ID]))
+        if ~exist(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat',['subject_' SUBJECT_ID]))
             mkdir(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat',['subject_' SUBJECT_ID]));
             disp(['New directory created for raw data for subject ' SUBJECT_ID])
         end
-        SAVE_PATH_RAW = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat', ['subject_' SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
+        
         save(SAVE_PATH_RAW, 'eye', 'unity', 'eeg')
         disp('Saved raw data!')
     end
@@ -656,6 +666,13 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         stimulus_type = Billboard.stimulus_type;
         billboard_cat = Billboard.category;
         target_category = target_category * ones(1,length(stimulus_type));
+        
+        % Create directory for epoched data of this subject
+        if ~exist(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)],['subject_' SUBJECT_ID]))
+            mkdir(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)],['subject_' SUBJECT_ID]));
+            disp(['New directory created for epoched data for subject ' SUBJECT_ID])
+        end
+        
         SAVE_PATH_EPOCHED = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)], ['subject_' SUBJECT_ID], ['s', SUBJECT_ID,'_b' BLOCK, '_epoched.mat']); %the path to where the raw data is stored.
         save(SAVE_PATH_EPOCHED,'EEG','pupil','dwell_times','stimulus_type', 'head_rotation', 'billboard_cat', 'target_category');
         disp('Saved epoched data!')
