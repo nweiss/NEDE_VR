@@ -17,9 +17,9 @@ SAVE_EPOCHED_DATA = true;
 PLOTS = false;
 
 EPOCHED_VERSION = 3; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '100';
-BLOCK = '1'; % First block in batch
-nBLOCKS = 2; % Number of blocks to do in batch
+SUBJECT_ID = '11';
+BLOCK = '11'; % First block in batch
+nBLOCKS = 10; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
@@ -154,16 +154,16 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     
     % Look for cue to start a new block from unity
     if UNITY
-%         disp('Waiting for start cue from unity...');
-%         while true
-%             [a, b] = inlet_unity.pull_sample(0);
-%             if ~isempty(a)
-%                 if a(end) == 1
-%                     disp('Start cue from Unity received!')
-%                     break
-%                 end
-%             end
-%         end
+        disp('Waiting for start cue from unity...');
+        while true
+            [a, b] = inlet_unity.pull_sample(0);
+            if ~isempty(a)
+                if a(end) == 1
+                    disp('Start cue from Unity received!')
+                    break
+                end
+            end
+        end
     end
     BLOCK = num2str(block_counter);
     disp(['***STARTING BLOCK ', BLOCK,'***']);
@@ -667,13 +667,18 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         billboard_cat = Billboard.category;
         target_category = target_category * ones(1,length(stimulus_type));
         
+        % Check that you are not overwriting existing data file
+        SAVE_PATH_EPOCHED = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)], ['subject_' SUBJECT_ID], ['s', SUBJECT_ID,'_b' BLOCK, '_epoched.mat']); %the path to where the raw data is stored.
+        if exist(SAVE_PATH_EPOCHED)==2
+            error('Data file already exists. Update subject and block number.') 
+        end
+        
         % Create directory for epoched data of this subject
         if ~exist(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)],['subject_' SUBJECT_ID]))
             mkdir(fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)],['subject_' SUBJECT_ID]));
             disp(['New directory created for epoched data for subject ' SUBJECT_ID])
         end
         
-        SAVE_PATH_EPOCHED = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)], ['subject_' SUBJECT_ID], ['s', SUBJECT_ID,'_b' BLOCK, '_epoched.mat']); %the path to where the raw data is stored.
         save(SAVE_PATH_EPOCHED,'EEG','pupil','dwell_times','stimulus_type', 'head_rotation', 'billboard_cat', 'target_category');
         disp('Saved epoched data!')
     end
