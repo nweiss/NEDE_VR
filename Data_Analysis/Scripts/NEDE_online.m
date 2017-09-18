@@ -12,26 +12,26 @@ EYE_connected = true;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
-SAVE_RAW_DATA = true;
-SAVE_EPOCHED_DATA = true;
+SAVE_RAW_DATA = false;
+SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 3; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '11';
-BLOCK = '11'; % First block in batch
-nBLOCKS = 10; % Number of blocks to do in batch
+SUBJECT_ID = '100';
+BLOCK = '6'; % First block in batch
+nBLOCKS = 1; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
 %% Set Paths and Load Data for Simulation Mode
-% Add path to where functions live
+% Add path to where functions livec
 function_path = fullfile('..','Functions');
 addpath(function_path);
 
 if (UNITY||PYTHON||EEG_connected||EYE_connected) == false
     % For simulation of matlab data processing code when no live signals
     % are being streamed
-    LOAD_PATH = fullfile('..','Data','raw_mat', ['subject_', SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
+    LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat', ['subject_', SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
     load(LOAD_PATH);
     % Because billboard_id can be zero, make default nan when no billboard
     % onscreen. Correct for old data collection system where default was 0.
@@ -43,7 +43,8 @@ end
 smi_pixels_y = 1010; % Range of SMI eye-tracker in the y-direction (in pixels)
 oculus_fov = 106.188; % Field of view of oculus in degrees (Unity lists it)
 oculus_pixels_x = 1915; % Pixels in oculus in the horizontal direction, found empirically
-allowedDiscrepency = 3*oculus_pixels_x/oculus_fov; % Number of degrees to expand the bounding box of billboards for fixation
+allowedDiscrepency = 6*oculus_pixels_x/oculus_fov; % Number of degrees to expand the bounding box of billboards for fixation
+
 block_duration = 140; % Upper bound used to initialize data storage variables (seconds) 
 trials_per_block = 20;
 n_chan = 64;
@@ -426,6 +427,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
             % If the eye is fixated on a billboard
             if eye_data(2, counter_eye) > left_border(counter_eye) && eye_data(2, counter_eye) < right_border(counter_eye)
                 isFixated(counter_eye) = 1;
+                
                 % If the billboard being fixated upon is new, add it to the list of billboard ids
                 if ~any(Billboard.id == unity_data(7, counter_unity))
                     Billboard.id = [Billboard.id unity_data(7, counter_unity)];

@@ -129,6 +129,11 @@ function UpdateObject (isCamGoingUp: boolean) {
 		{
 			isObjOnRight = true;
 		}
+		//Debug.Log("objPos: " + objPos);
+		//Debug.Log("camPos: " + camPos);
+
+		//Debug.Log("Going up in world space: " + isCamGoingUp);
+		//Debug.Log("Billboard on right in world space: " + isObjOnRight);
 
 		// for a given billboard, find the inside upper corner. Create a point "corner" that is the coordinates just inside the corner. 
 		// This will allow a raycast from the camera in the direction of corner to make contact with the billboard.
@@ -233,13 +238,12 @@ function UpdateObject (isCamGoingUp: boolean) {
 		//Debug.Log("object hit: " + hitInfo.collider.gameObject.name);
 		if (hitSomething == true) 
 			{
-			if (hitInfo.collider.gameObject.name == "Cube") 
+				if (hitInfo.collider.gameObject.name == "Cube") 
 				{
-				rayCastHitBillboard = true;
+					rayCastHitBillboard = true;
 				}
 			}
 		}
-
 	// If the raycast is not hitting a billboard, return fractionVisible = 0
 	if (!rayCastHitBillboard) 
 	{
@@ -320,10 +324,7 @@ function UpdateObject (isCamGoingUp: boolean) {
 	boundsRect = Rect(leftmost_visible, top, rightmost_visible-leftmost_visible,top-bottom);
 	fractionVisible = (rightmost_visible-leftmost_visible)/(right-left);
 
-
 	return fractionVisible;
-
-		
 }
 
 //To run when the object is destroyed

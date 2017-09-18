@@ -2,7 +2,8 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Logging\PlaceAll.js">
     <Files>
-      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="122" Column="49" />
+      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="115" Column="12" />
+      <File FileName="Assets\Scripts\Logging\GetScreenBounds_cubby.js" Line="132" Column="10" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

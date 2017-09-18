@@ -291,7 +291,6 @@ function Start () {
 
 	this.enabled = true;
 	var prevObjNum = 1000;
-	Debug.Log("Checkpoint: end of placeall start()");
 }
 
 // Place photodiode square in upper right corner
@@ -415,11 +414,13 @@ function LateUpdate() {
 		isCamGoingUp = true;
 	else
 		isCamGoingUp = false;
+	//Debug.Log("isCamGoingUp: " + isCamGoingUp);
 
 	//Update object screen bounds
 	if (recordObjBox) {
 		var thisObj; var boundsScript; 
 		var fractionVisible = 0.0;
+		var isObjectOnRight = 0.0;
 		var isObjInView = false;
 		for (var i=0; i<objectsInPlay.length; i++) {		
 			thisObj = objectsInPlay[i];
@@ -654,7 +655,6 @@ function CreateFeedback(unity_from_matlab : float[]) {
 	}
 	if (unity_from_matlab[2] > 1.0/5.0 && unity_from_matlab[2] < 2.0/5.0) // correct classification of target with confidence > 2/3
 	{
-		Debug.Log("hi");
 		feedback_object = Instantiate(feedback_sphere[3], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
 	}
 	if (unity_from_matlab[2] < 1.0/5.0) // correct classification of target with confidence > 2/3
