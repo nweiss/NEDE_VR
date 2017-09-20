@@ -5,11 +5,11 @@ clc; clear all; close all;
 
 %% Settings
 % Specify which systems are connected
-UNITY = true;
-PYTHON = false;
-EEG_connected = true;
-EYE_connected = true;
-CLOSED_LOOP = false;
+UNITY = false;
+PYTHON = true;
+EEG_connected = false;
+EYE_connected = false;
+CLOSED_LOOP = true;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
 SAVE_RAW_DATA = false;
@@ -17,9 +17,9 @@ SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 3; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '100';
-BLOCK = '6'; % First block in batch
-nBLOCKS = 1; % Number of blocks to do in batch
+SUBJECT_ID = '8';
+BLOCK = '1'; % First block in batch
+nBLOCKS = 2; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
@@ -28,7 +28,7 @@ EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn
 function_path = fullfile('..','Functions');
 addpath(function_path);
 
-if (UNITY||PYTHON||EEG_connected||EYE_connected) == false
+if (UNITY||EEG_connected||EYE_connected) == false
     % For simulation of matlab data processing code when no live signals
     % are being streamed
     LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat', ['subject_', SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
@@ -56,6 +56,9 @@ n_block_start_cues = 0;
 % Thresholds for pupil radius to be considered valid data
 blink_upper_thresh = 3.2;
 blink_lower_thresh = 1.3;
+
+% Dimensions of the chunks we are pushing to python
+dimChunkForPython = [66, 385];
 
 %% Create Filters
 % High Pass Filter for EEG
@@ -90,7 +93,7 @@ Hd_lp_pupil = design(h_lp_pupil, 'cheby2', 'MatchExactly', match);
 
 %% Instantiate the Data Streams
 % Load LSL libraries
-if UNITY||EEG_connected||EYE_connected
+if UNITY||EEG_connected||EYE_connected||PYTHON
     addpath(genpath(fullfile('..','liblsl-Matlab')));
     addpath('..','dependancies')
     lib = lsl_loadlib();
@@ -105,9 +108,10 @@ end
 
 % Create outlet from matlab to python
 if PYTHON
-    info = lsl_streaminfo(lib,'Matlab','data_epochs',66,0,'cf_float32', 'Matlab2015a');
+    info = lsl_streaminfo(lib,'Matlab->Python','data_epochs',66,0,'cf_float32', 'Matlab2015a');
     outlet = lsl_outlet(info, 385, 385);
     disp('Opened outlet: Matlab -> Python');
+    pause(2);
 end
 
 % Create outlet from matlab to BCILab
@@ -119,7 +123,8 @@ end
 
 %% Outer loop - Iterate over blocks of the experiment
 for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
-    
+    BLOCK = num2str(block_counter);
+
     % Create Inlets
     % Create inlet from eyetracker to matlab
     if EYE_connected
@@ -166,7 +171,26 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
             end
         end
     end
-    BLOCK = num2str(block_counter);
+    
+    if (PYTHON && CLOSED_LOOP)
+        % Create the cue for python to start a new block
+        %    1 - (66,385) is the start cue. 1 to start a block, -1 to end
+        %    it, and 0 throughout. 
+        %    2 - (66,383) is subject ID
+        %    3 - (66,384) is the block number
+        %    4 - (66,382) is the number of blocks in the set
+        startCuePython = zeros(dimChunkForPython);
+        startCuePython(end,end) = 1;
+        startCuePython(end,end-2) = str2num(SUBJECT_ID);
+        startCuePython(end,end-1) = str2num(BLOCK);
+        startCuePython(end,end-3) = nBLOCKS;
+        
+        % Push data to python
+        pause(1.5) % Need a delay between opening the outlet and pushing
+        outlet.push_chunk(startCuePython);
+        disp('Pushed start cue to python')
+    end
+    
     disp(['***STARTING BLOCK ', BLOCK,'***']);
     fprintf('\n')
 
@@ -511,7 +535,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
 
                 %% Send Epoched Data to Python
                 if PYTHON
-                    % Package all the data from one epoch into a 65x385 matrix
+                    % Package all the data from one epoch into a 66x385 matrix
                     % to be sent to Unity. The data has the following format:
                     %    1 - (1:64,1:385) is all EEG data.
                     %    2 - (65,1:150) is the head rotation
@@ -522,7 +546,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     %    6 - (66,4) is the billboard category (1=car, 2=grand piano, 3=laptops, 4=schooners)
                     %    7 - (66,5:245) is the pupil dilation
                     %    8 - (66,246:385) is zeros
-                    %    9 - (66,385) is the exit cue. It is 0 throughout the
+                    %    9 - (66,385) is the cue. 1 to start the block, -1 to end it, and 0 throughout the
                     %    main loop, but is 1 when cuing python that matlab has
                     %    finished its main loop
                     Epoch.complete = zeros(size(EEG.processed,1)+2, size(EEG.processed,2));
@@ -601,10 +625,10 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     end
     Billboard.nTargetsPassed = sum(unity_data(5,Billboard.pass_onsets)==1);
 
-    % Push block end cue to python
+    % Push block exit cue to python
     if PYTHON
         tmp = zeros(size(Epoch.complete,1),size(Epoch.complete,2));
-        tmp(end,end) = 1;
+        tmp(end,end) = -1;
         tmp(end,end-1) = target_category;
         outlet.push_chunk(tmp);
     end
@@ -718,9 +742,12 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     
 end
 
-% Close outlet
+% Send set end cue to python and close outlet
 if CLOSED_LOOP || PYTHON
-    pause(1); % Give python time to pick up the exit cue before closing the stream
+    setEndCue = zeros(dimChunkForPython);
+    setEndCue(end,end) = -2;
+    outlet.push_chunk(setEndCue);
+    pause(1.5); % Give python time to pick up the exit cue before closing the stream
     outlet.delete()
     disp('outlet closed')
 end

@@ -1,45 +1,32 @@
 import sys
 import scipy
 import os
-import time
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 from random import random as rand
-sys.path.append('liblsl-Python-1.11/liblsl-Python/pylsl')
+sys.path.append('../liblsl-Python-1.11/liblsl-Python/pylsl')
 from pylsl import StreamInlet, resolve_byprop, StreamInfo, StreamOutlet
-
+sys.path.append('../../../EEGnet-VR')
 from EEGNet import EEGNet
 
 #SETTINGS
-SAVE_DATA = True
+SAVE_EPOCHED_DATA = False
+SAVE_CLASSIFICATION_DATA = False
 SINGLE_TRIAL_FEEDBACK = True
-BLOCK_PREDICTION = True
-SUBJECT_ID = '8'
-BLOCK = '107'
+BLOCK_PREDICTION = False
 EPOCH_VERSION = '3'
 TRAINING = False
-
-directory = '../../../Dropbox/NEDE_Dropbox/Data/epoched_v' + EPOCH_VERSION + '/subject_' + SUBJECT_ID
-filepath = directory + '/s' + SUBJECT_ID + '_b' + BLOCK + '_epoched.mat'
-
-# Check that the file paths are correct
-if SAVE_DATA:
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-        print('made directory: ' + directory)
-    if os.path.exists(filepath):
-        raise ValueError('Path already exists. Do not overwrite data!')
 
 # Create LSL outlet
 info = StreamInfo('Python', 'classifications', 3)
 outlet = StreamOutlet(info)
-print("Outlet Created: Python")
+print("Outlet Created: Python->Unity")
 
 # Create LSL inlet
-stream = resolve_byprop('name', 'Matlab')
+stream = resolve_byprop('name', 'Matlab->Python')
 inlet = StreamInlet(stream[0])
-print("Inlet Created: Matlab")
+print("Inlet Created: Matlab->Python")
 
 # Initialize variables
 counter_epoch = 0
@@ -59,71 +46,81 @@ np.random.seed(123)
 EEGnet = EEGNet(type = 'VR')
 EEGNet.model.load_weights('weights.hf5')
 
-print("***Now Receiving Data***")
-# MAIN LOOP
-#t_prev = 0
+print("Now Receiving Data")
+print()
+
+# Wait for cue from matlab to start a new block
 while True:
-    # Exit the loop if it has been more than 20 seconds since the last epoch input
-    '''
-    elapsed = time.time() - t_prev
-    if (counter_epoch > 0) & (elapsed > 20):
-        break
-     '''    
-    time.sleep(1)
-    # RECEIVE DATA    
-    # try to pull a new chunk     
-    chunk, timestamps = inlet.pull_chunk(timeout = 1)
+    # Pull a new chunk
+    #chunk, timestamps = inlet.pull_chunk(timeout = 1)
+    chunk, timestamps = inlet.pull_chunk(timeout=.1)
     epoch = np.transpose(np.asarray(chunk))
+    if epoch.shape[0] != 0:        
 
-    # if a chunk is received
-    if epoch.shape[0] != 0:
-        #if epoch.shape[1] == 385:
-        print
-        print(epoch[-1,1])
-        print(epoch[-1,-1])
-        
-        # Check for the cue to exit from matlab
-        if epoch[-1,-1] == 1:
-            target_cat = epoch[-1,-2]
+        # Check if chunk is cue end current block
+        if epoch[-1,-1] == -1:
+            BLOCK = int(epoch[-1,-2])
+            print("***Finished block: ", BLOCK,"***")
+            
+        # Check if chunk is cue to end the session
+        if epoch[-1,-1] == -2:
+            print("Ending session")
             break
-        
-        eeg[:,:,counter_epoch] = epoch[0:-2,:]
-        head_rotation[counter_epoch,:] = epoch[-2,0:head_rotation.shape[1]]
-        stimulus_type[counter_epoch] = epoch[-1,0]
-        billboard_id[counter_epoch] = epoch[-1,1]
-        dwell_time[counter_epoch] = epoch[-1,2]
-        billboard_cat[counter_epoch] = epoch[-1,3]
-        pupil[counter_epoch,:] = epoch[-1, 4:245]
-        
-        # Classify data
-        # process data
-        eeg_trial = eeg[:,:,counter_epoch]
-        eeg_trial = np.reshape(eeg_trial,eeg_trial.shape + (1,))        
-        eeg_trial = np.transpose(eeg_trial,(2,0,1))
-        eeg_trial = np.reshape(eeg_trial,eeg_trial.shape + (1,))
-        
-        head_trial = head_rotation[counter_epoch,:]
-        head_trial = np.reshape(head_trial,(1,) + head_trial.shape + (1,))
-        
-        pupil_trial = pupil[counter_epoch,:]
-        pupil_trial = np.reshape(pupil_trial,(1,) + pupil_trial.shape + (1,))
-        
-        dwell_trial = dwell_time[counter_epoch]
-        dwell_trial = np.reshape(dwell_trial,(1,) + dwell_trial.shape + (1,))
-        
-        probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
-        pred_class = np.argmax(probs)
-        confidence = probs[0,1]
-        stream_out = [billboard_id[counter_epoch], pred_class, confidence]
-        
-        # random classifier
-        #stream_out = [billboard_id[counter_epoch], np.round(3.0 * rand())+1, rand()] 
-        if SINGLE_TRIAL_FEEDBACK:
-            outlet.push_sample(stream_out)
-        print('Billboard No: %d    Classification: %d    Confidence: %f' %(stream_out[0], stream_out[1], stream_out[2]))
 
-        #t_prev = time.time()        
-        counter_epoch += 1
+        # Check if chunk is cue to start new block
+        if epoch[-1,-1] == 1:
+            SUBJECT_ID = int(epoch[-1,-3])
+            BLOCK = int(epoch[-1,-2])
+            print("***Starting block ", BLOCK, "***")
+            directory = '../../../Dropbox/NEDE_Dropbox/Data/epoched_v' + EPOCH_VERSION + '/subject_' + str(SUBJECT_ID)
+            filepath = directory + '/s' + str(SUBJECT_ID) + '_b' + str(BLOCK) + '_epoched.mat'
+            # Check that the file paths are correct
+            if SAVE_EPOCHED_DATA:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                    print('made directory: ' + directory)
+                if os.path.exists(filepath):
+                    raise ValueError('Path already exists. Do not overwrite data!')
+    
+        # If chunk is an epoch of data
+        if epoch[-1,-1] == 0:
+            eeg[:,:,counter_epoch] = epoch[0:-2,:]
+            head_rotation[counter_epoch,:] = epoch[-2,0:head_rotation.shape[1]]
+            stimulus_type[counter_epoch] = epoch[-1,0]
+            billboard_id[counter_epoch] = epoch[-1,1]
+            dwell_time[counter_epoch] = epoch[-1,2]
+            billboard_cat[counter_epoch] = epoch[-1,3]
+            pupil[counter_epoch,:] = epoch[-1, 4:245]
+    
+            # Classify data
+            # process data
+            eeg_trial = eeg[:,:,counter_epoch]
+            eeg_trial = np.reshape(eeg_trial,eeg_trial.shape + (1,))
+            eeg_trial = np.transpose(eeg_trial,(2,0,1))
+            eeg_trial = np.reshape(eeg_trial,eeg_trial.shape + (1,))
+    
+            head_trial = head_rotation[counter_epoch,:]
+            head_trial = np.reshape(head_trial,(1,) + head_trial.shape + (1,))
+    
+            pupil_trial = pupil[counter_epoch,:]
+            pupil_trial = np.reshape(pupil_trial,(1,) + pupil_trial.shape + (1,))
+    
+            dwell_trial = dwell_time[counter_epoch]
+            dwell_trial = np.reshape(dwell_trial,(1,) + dwell_trial.shape + (1,))
+    
+            probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
+            pred_class = np.argmax(probs)
+            confidence = probs[0,1]
+            stream_out = [billboard_id[counter_epoch], pred_class, confidence]
+    
+            # random classifier
+            #stream_out = [billboard_id[counter_epoch], np.round(3.0 * rand())+1, rand()]
+            if SINGLE_TRIAL_FEEDBACK:
+                outlet.push_sample(stream_out)
+            print('Billboard No: %d    Classification: %d    Confidence: %f' %(stream_out[0], stream_out[1], stream_out[2]))
+    
+            #t_prev = time.time()
+            counter_epoch += 1
 
 inlet.close_stream()
 print('inlet closed')
@@ -145,7 +142,7 @@ confidence = np.delete(confidence, missed_trials, 0)
 
 if BLOCK_PREDICTION:
     pred_block = np.round(3.0 * rand())+1
-    if pred_block == 1:     
+    if pred_block == 1:
         image = Image.open('Pics/car_side-46.jpg').convert("L")
         plt.figure
         arr = np.asarray(image)
@@ -167,20 +164,20 @@ if BLOCK_PREDICTION:
         plt.figure
         plt.imshow(image)
         plt.title('is this what you had in mind?')
-        
+
 
 print('Number of targets observed: %d' %np.sum(stimulus_type == 1))
 
 # Save data
-if SAVE_DATA:
+if SAVE_EPOCHED_DATA:
     # Check that you are not overwriting existing data
     if os.path.isfile(filepath):
         raise Exception('Data file already exists. Update subject and block number.')
-    
+
     # If the directory does not already exist, create it
     if not os.path.isdir(directory):
         os.makedirs(directory)
-        
+
     target_cat = target_cat * np.ones((len(stimulus_type)))
     scipy.io.savemat(filepath, {'EEG': eeg, 'stimulus_type': stimulus_type, 'billboard_id': billboard_id,'dwell_times': dwell_time, 'pupil': pupil, 'head_rotation': head_rotation, 'billboard_cat': billboard_cat, 'target_category': target_cat, 'classification': classification, 'confidence': confidence})
     print('Data Saved')

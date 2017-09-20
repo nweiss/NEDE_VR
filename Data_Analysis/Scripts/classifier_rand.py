@@ -13,20 +13,7 @@ from pylsl import StreamInlet, resolve_byprop, StreamInfo, StreamOutlet
 SAVE_DATA = False
 SINGLE_TRIAL_FEEDBACK = True
 BLOCK_PREDICTION = False
-SUBJECT_ID = '8'
-BLOCK = '42'
 TRAINING = False
-
-directory = 'Data/subject_' + SUBJECT_ID
-filepath = directory + '/s' + SUBJECT_ID + '_b' + BLOCK + '_epoched.mat'
-
-# Check that the file paths are correct
-if SAVE_DATA:
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-        print('made directory: ' + directory)
-    if os.path.exists(filepath):
-        raise ValueError('Path already exists. Do not overwrite data!')
 
 # Create LSL outlet
 info = StreamInfo('Python', 'classifications', 3)
@@ -34,7 +21,7 @@ outlet = StreamOutlet(info)
 print("Outlet Created: Python")
 
 # Create LSL inlet
-stream = resolve_byprop('name', 'Matlab')
+stream = resolve_byprop('name', 'Matlab->Python')
 inlet = StreamInlet(stream[0])
 print("Inlet Created: Matlab")
 
@@ -51,18 +38,33 @@ classification = np.zeros((20))
 confidence = np.zeros((20))
 target_cat = 0
 
-
 print("***Now Receiving Data***")
+
+
+
 # MAIN LOOP
-#t_prev = 0
+# Wait for cue to start a block from Matlab
 while True:
-    # Exit the loop if it has been more than 20 seconds since the last epoch input
-    '''
-    elapsed = time.time() - t_prev
-    if (counter_epoch > 0) & (elapsed > 20):
-        break
-     '''    
     time.sleep(1)
+    chunk, timestamps = inlet.pull_chunk(timeout = 1)
+    epoch = np.transpose(np.asarray(chunk))
+    if epoch[-1,-1] == 1:
+        nBlocks = epoch[-1,-4]
+        block = epoch[-1,-3]
+        print("Starting block: " + block)
+        
+        # Check that the file paths are correct
+    if SAVE_DATA:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            print('made directory: ' + directory)
+        if os.path.exists(filepath):
+            raise ValueError('Path already exists. Do not overwrite data!')
+    
+    # For each block
+    
+    # Define the filepaths
+    
     # RECEIVE DATA    
     # try to pull a new chunk     
     chunk, timestamps = inlet.pull_chunk(timeout = 1)
@@ -76,7 +78,7 @@ while True:
         print(epoch[-1,-1])
         
         # Check for the cue to exit from matlab
-        if epoch[-1,-1] == 1:
+        if epoch[-1,-1] == -1:
             target_cat = epoch[-1,-2]
             break
         
