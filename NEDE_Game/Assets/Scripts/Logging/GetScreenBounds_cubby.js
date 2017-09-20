@@ -108,7 +108,7 @@ function StartObject() {
 
 //Find the object's position in screen coordinates and see if the subject's
 //eyes are on or near it.
-function UpdateObject (isCamGoingUp: boolean) {
+function UpdateObject (isCamGoingUp: boolean, objNum: int) {
 
 	var isInView = false;
 	var rayCastHitBillboard = false;
@@ -121,6 +121,7 @@ function UpdateObject (isCamGoingUp: boolean) {
 	var cornerDirection: Vector3;
 	var vertices_screenA: Vector3;
 	var isObjOnRight = false; // in world space (x-axis)
+	var isObjOnRightFloat = 0.0;
 
 	if (distance < 25)
 	{
@@ -128,6 +129,7 @@ function UpdateObject (isCamGoingUp: boolean) {
 		if (objPos[0] > camPos[0]) // object is on the right in world space
 		{
 			isObjOnRight = true;
+			isObjOnRightFloat = 1.0;
 		}
 		//Debug.Log("objPos: " + objPos);
 		//Debug.Log("camPos: " + camPos);
@@ -244,19 +246,27 @@ function UpdateObject (isCamGoingUp: boolean) {
 				}
 			}
 		}
+
 	// If the raycast is not hitting a billboard, return fractionVisible = 0
 	if (!rayCastHitBillboard) 
 	{
 		fractionVisible = 0;
 		//boundsRect = Rect(0,0,0,0);
+		if (objNum+1==8){
+		Debug.Log("return1");
+		}
 		return fractionVisible;
 	}
+
+
 
 	// If the camera is not pointing in the direction of the object, return fractionVisible = 0
 	if (Vector3.Dot(cam.transform.forward, cornerDirection) < 1)
 	{
 		fractionVisible = 0;
-		return fractionVisible;
+		if (objNum+1==8){
+		Debug.Log("return2");
+		}		return fractionVisible;
 	}
 
 	
@@ -272,14 +282,18 @@ function UpdateObject (isCamGoingUp: boolean) {
 	var vertices_screen: Vector3;
 	for (var i=0; i<vertices.Length; i++) {
 		vertices_screen = cam.WorldToScreenPoint(vertices[i]);
-		if (vertices_screen.x < left)
+		if (vertices_screen.x < left) {
 			left = vertices_screen.x;
-		else if (vertices_screen.x > right)
+		}
+		if (vertices_screen.x > right) {
 			right = vertices_screen.x;
-		if (vertices_screen.y < bottom)
+		}
+		if (vertices_screen.y < bottom) {
 			bottom = vertices_screen.y;
-		else if (vertices_screen.y > top)
+		}
+		if (vertices_screen.y > top) {
 			top = vertices_screen.y;
+		}
 	}
 	
 	//---Find the bounding box of the object given that things are in the way
@@ -302,6 +316,17 @@ function UpdateObject (isCamGoingUp: boolean) {
 	if (left > Screen.width || right < 0 || left > rightWall.x || right < leftWall.x) { //if the object is offscreen or occluded
 		//boundsRect = Rect(0,0,0,0);		
 		fractionVisible = 0;
+//		if (objNum+1==8) {
+//			Debug.Log("left" + left);
+//			Debug.Log("rightwallx" + rightWall.x);
+//			Debug.Log("right" + right);
+//			Debug.Log("leftWall.x" + leftWall.x);
+//				for (var ii=0; ii<vertices.Length; ii++) {
+//					vertices_screen = cam.WorldToScreenPoint(vertices[ii]);
+//					Debug.Log("vertices_screen x: " + vertices_screen.x);
+//				}
+//			Debug.Log("return3");
+//		}
 		return fractionVisible;
 	}
 	
@@ -323,6 +348,12 @@ function UpdateObject (isCamGoingUp: boolean) {
 	rightmost_visible = rightmost_visible*oculusScreenWidth/Screen.width;
 	boundsRect = Rect(leftmost_visible, top, rightmost_visible-leftmost_visible,top-bottom);
 	fractionVisible = (rightmost_visible-leftmost_visible)/(right-left);
+
+//	if (objNum + 1 == 8) {
+//		Debug.Log("bounds rect: " + boundsRect);
+//		Debug.Log(Time.time);
+//
+//	}
 
 	return fractionVisible;
 }

@@ -8,6 +8,7 @@ from random import random as rand
 sys.path.append('../liblsl-Python-1.11/liblsl-Python/pylsl')
 from pylsl import StreamInlet, resolve_byprop, StreamInfo, StreamOutlet
 sys.path.append('../../../EEGnet-VR')
+sys.path.append('../../../EEGnet-VR/weights/jenn')
 from EEGNet import EEGNet
 
 #SETTINGS
@@ -43,8 +44,8 @@ target_cat = 0
 
 # Initialize Deep Learning
 np.random.seed(123)
-EEGnet = EEGNet(type = 'VR')
-EEGNet.model.load_weights('weights.hf5')
+EEGnet = EEGNet(type= 'VR')
+EEGnet.model.load_weights('../../../EEGnet-VR/weights/jenn/CombinedModelWeights_fold8.hf5')
 
 print("Now Receiving Data")
 print()

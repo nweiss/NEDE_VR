@@ -1,9 +1,9 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Logging\PlaceAll.js">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Logging\GetScreenBounds_cubby.js">
     <Files>
-      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="508" Column="2" />
       <File FileName="Assets\Scripts\Logging\GetScreenBounds_cubby.js" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

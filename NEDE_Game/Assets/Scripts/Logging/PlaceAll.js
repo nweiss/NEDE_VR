@@ -422,14 +422,19 @@ function LateUpdate() {
 		var fractionVisible = 0.0;
 		var isObjectOnRight = 0.0;
 		var isObjInView = false;
+		var updateArgs;
 		for (var i=0; i<objectsInPlay.length; i++) {		
 			thisObj = objectsInPlay[i];
 			if (thisObj != null) {
 				//Get the bounding script
 				boundsScript = thisObj.GetComponent(GetScreenBounds_cubby);
-				fractionVisible = boundsScript.UpdateObject(isCamGoingUp);
+				fractionVisible = boundsScript.UpdateObject(isCamGoingUp, i);
+
 				//Record visibility
 				if (fractionVisible > .01) {
+//					Debug.Log("On Right?:" + isObjectOnRight);
+//					Debug.Log(Time.time);
+//					Debug.Log("Object num:" + i);
 					isObjInView = true;               
                     if(thisObj.tag == "TargetObject") {
                     	isTarget = 1;
@@ -500,15 +505,15 @@ function LateUpdate() {
 			// unity_from_matlab[0] is the number of the billboard
 			// unity_from_matlab[1] is the classification of the billboard 
 			// unity_from_matlab[0] is the confidence of the classification for the given billboard
-		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
-	
-		//if Python has pushed a sample
-		if (unity_from_matlab[1] != 0){
-			Debug.Log("Billboard #: " + unity_from_matlab[0] + "\t classified as: " + unity_from_matlab[1] + "\t confidence: " + unity_from_matlab[2]);
-			//create graphic to show the classification of a billboard
-			CreateFeedback(unity_from_matlab);			
+//		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
+//	
+//		//if Python has pushed a sample
+//		if (unity_from_matlab[1] != 0){
+//			Debug.Log("Billboard #: " + unity_from_matlab[0] + "\t classified as: " + unity_from_matlab[1] + "\t confidence: " + unity_from_matlab[2]);
+//			//create graphic to show the classification of a billboard
+//			CreateFeedback(unity_from_matlab);			
 		}
-	}
+//	}
 	//===================================================================================
 
 	//Log Camera Position
