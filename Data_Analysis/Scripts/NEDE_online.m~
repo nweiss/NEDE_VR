@@ -539,9 +539,9 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 EEG.filtered = filtfilt(Hd_lp.sosMatrix, Hd_lp.ScaleValues, EEG.filtered')';
                 EEG.downsampled = downsample(EEG.filtered', 8)';
                 temporary = 1;
-                % WORKING HERE
                 if PCA_ICA
                     
+                
                 else
                     EEG.baseline = mean(EEG.downsampled(:, 1:floor(256*.2)), 2);
                 end

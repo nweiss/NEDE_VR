@@ -47,8 +47,8 @@ for BLOCK = 1:nBLOCKS
     load(load_path);
     
     % Filter
-    EEG.hp = filter(Hd_hp, eeg.time_series')';
-    EEG.filtered = filter(Hd_lp, eeg.time_series')';
+    EEG.hp = filter(Hd_hp, eeg.time_series(2:65,:)')';
+    EEG.filtered = filter(Hd_lp, EEG.hp')';
     
     % Downsample
     EEG.downsampled = downsample(EEG.filtered',8)';
@@ -80,9 +80,4 @@ if SAVE_ON
     
 end
 
-% for i = 1:8
-%     figure
-%     plot(eeg.time_series(2+(i-1)*8:9+(i-1)*8,10000:15000)')
-%     title(num2str((i-1)*8))
-% end
 disp('Done')
