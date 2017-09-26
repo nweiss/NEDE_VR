@@ -538,10 +538,13 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 EEG.filtered = filtfilt(Hd_hp.sosMatrix, Hd_hp.ScaleValues, EEG.epoch')';
                 EEG.filtered = filtfilt(Hd_lp.sosMatrix, Hd_lp.ScaleValues, EEG.filtered')';
                 EEG.downsampled = downsample(EEG.filtered', 8)';
-                temporary = 1;
+                % WORKING HERE
                 if PCA_ICA
-                    
-                
+                    EEG.pcs = pca_coeff'*EEG.downsampled;
+                    EEG.pc_cleaned = pinv(pca_coeff)'*EEG.pcs;
+                    % Find the component activations. Code borrowed from:
+                    % https://sccn.ucsd.edu/pipermail/eeglablist/2013/006954.html
+                    EEG.ics = (EEG.pc_cleaned*icasphere)*EEGlab.data(EEGlab.icachansind,:);
                 else
                     EEG.baseline = mean(EEG.downsampled(:, 1:floor(256*.2)), 2);
                 end

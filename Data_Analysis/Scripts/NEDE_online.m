@@ -14,13 +14,13 @@ CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
 SAVE_RAW_DATA = false;
-SAVE_EPOCHED_DATA = false;
+SAVE_EPOCHED_DATA = true;
 PLOTS = false;
 
-EPOCHED_VERSION = 3; % Different versions of the data. Look at readme in data folder for details.
+EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
 SUBJECT_ID = '11';
 BLOCK = '1'; % First block in batch
-nBLOCKS = 1; % Number of blocks to do in batch
+nBLOCKS = 40; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
@@ -535,17 +535,23 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 end
 
                 %% Process EEG Data
+                % HP and LP Filter. Downsample.
                 EEG.filtered = filtfilt(Hd_hp.sosMatrix, Hd_hp.ScaleValues, EEG.epoch')';
                 EEG.filtered = filtfilt(Hd_lp.sosMatrix, Hd_lp.ScaleValues, EEG.filtered')';
                 EEG.downsampled = downsample(EEG.filtered', 8)';
-                temporary = 1;
-                % WORKING HERE
+
+                % Clean using PCA and ICA
                 if PCA_ICA
-                    
-                else
-                    EEG.baseline = mean(EEG.downsampled(:, 1:floor(256*.2)), 2);
+                    EEG.pcs = pca_coeff'*EEG.downsampled;
+                    EEG.pc_cleaned = pinv(pca_coeff)'*EEG.pcs;
+                    % Find the component activations. Code borrowed from:
+                    % https://sccn.ucsd.edu/pipermail/eeglablist/2013/006954.html
+                    EEG.ica = (icaweights*icasphere)*EEG.pc_cleaned;
+                    EEG.downsampled = EEG.ica;
                 end
                 
+                % Baseline EEG Data
+                EEG.baseline = mean(EEG.downsampled(:, 1:floor(256*.2)), 2);                
                 for i = 1:n_chan
                     EEG.processed(i,:,counter_epoch) = EEG.downsampled(i,:) - EEG.baseline(i);  
                 end
