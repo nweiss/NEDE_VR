@@ -55,6 +55,14 @@ for BLOCK = 1:nBLOCKS
     % Downsample
     EEG.downsampled = downsample(EEG.filtered',8)';
     
+    figure
+    plot(EEG.downsampled(33,1:1000))
+    hold on
+    plot(EEG.downsampled(1,1:1000))
+    hold on
+    plot(EEG.downsampled(34,1:1000))
+    legend('unplugged')
+    
     % Concatenate into a single continuous set of EEG
     EEG.compiled = [EEG.compiled, EEG.downsampled];
 end
