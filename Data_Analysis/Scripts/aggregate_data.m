@@ -3,21 +3,21 @@
 % well as which subject and block it came from.
 clear all; clc; close all;
 
-DATA_VERSION_NO = '4';
+DATA_VERSION_NO = '6';
 SAVE_ON = false;
 
 % Number of blocks recorded for each subject
-BLOCKS = [13,9,0,13,16,33,23,42];
-SUBJECTS = [1,2,4,5,6,7,8];
+BLOCKS = [13,9,0,13,16,33,23,42,0,39,40];
+SUBJECTS = 11;%[1,2,4,5,6,7,8];
 
 % Delete trials with extreme head rotation values. This happens occasionaly
 % on the last stimulus of a block if the game exits before the end of the
 % epoch.
-DELETE_EXT_HEAD_ROT = true;  
+DELETE_EXT_HEAD_ROT = false;  
 
 % Delete trials that include an EEG value over a certain threshold. Happens
 % with bad electrodes.
-DELETE_EXT_EEG = true;
+DELETE_EXT_EEG = false;
 threshold = 750;
 
 ERROR_BAR_PATH = fullfile('..', 'dependancies', 'shadedErrorBar');
@@ -44,7 +44,9 @@ for i = SUBJECTS
         clear billboard_cat
         clear target_category
         
-        LOAD_PATH = fullfile('..', 'Data', ['epoched_v' DATA_VERSION_NO], ['subject_', num2str(i)], ['s', num2str(i), '_b', num2str(j), '_epoched.mat']);
+        LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox',...
+            'Data', ['epoched_v' DATA_VERSION_NO], ['subject_', num2str(i)],...
+            ['s', num2str(i), '_b', num2str(j), '_epoched.mat']);
         load(LOAD_PATH);
         
         dwell_times_agg = cat(2, dwell_times_agg, dwell_times);
@@ -65,6 +67,15 @@ end
 
 n_trials_before_pruning = length(stimulus_type_agg);
 disp(['Total trials before pruning: ' num2str(n_trials_before_pruning)])
+
+% For subject 11
+% EEG_agg(:,:,1) = [];
+% head_rotation_agg(1,:) = [];
+% pupil_agg(1,:) = [];
+% stimulus_type_agg(1) = [];
+% dwell_times_agg(1) = [];
+% billboard_cat_agg(1) = [];
+% target_category_agg(1) = [];
 
 %% Delete Trials with extreme head rotation values
 % on the last trial of a given block, occassionally, the last 300 ms or so
@@ -263,8 +274,10 @@ set(gcf,'Color','w');
 
 %% Save Data
 if SAVE_ON    
-    SAVE_PATH = fullfile('..', 'Data', ['training_v' DATA_VERSION_NO], 'training_data.mat');
+    SAVE_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox',...
+            'Data', ['training_v' DATA_VERSION_NO], 'training_data.mat');
     save(SAVE_PATH, 'EEG', 'head_rotation', 'pupil', 'stimulus_type', 'dwell_times', 'billboard_cat', 'target_category', 'subject', 'block')
+    disp('Data Saved')
 end
     
 disp('done')
