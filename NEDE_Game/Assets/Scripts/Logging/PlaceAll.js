@@ -505,15 +505,17 @@ function LateUpdate() {
 			// unity_from_matlab[0] is the number of the billboard
 			// unity_from_matlab[1] is the classification of the billboard 
 			// unity_from_matlab[0] is the confidence of the classification for the given billboard
-//		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
-//	
-//		//if Python has pushed a sample
-//		if (unity_from_matlab[1] != 0){
-//			Debug.Log("Billboard #: " + unity_from_matlab[0] + "\t classified as: " + unity_from_matlab[1] + "\t confidence: " + unity_from_matlab[2]);
-//			//create graphic to show the classification of a billboard
-//			CreateFeedback(unity_from_matlab);			
+		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
+		//Debug.Log(unity_from_matlab[0]);
+		//if Python has pushed a sample
+		if (unity_from_matlab[0] != 0){
+			//Debug.Log(unity_from_matlab[0]);
+			Debug.Log("Billboard #: " + unity_from_matlab[0] + "\t classified as: " + unity_from_matlab[1] + "\t confidence: " + unity_from_matlab[2]);
+			//create graphic to show the classification of a billboard
+			CreateFeedback(unity_from_matlab);			
+
 		}
-//	}
+	}
 	//===================================================================================
 
 	//Log Camera Position
@@ -639,85 +641,32 @@ function CreateFeedback(unity_from_matlab : float[]) {
 	// The variable unity_from_matlab has three values for each billboard
 		// unity_from_matlab[0] is the number of the billboard
 		// unity_from_matlab[1] is the classification of the billboard
-		//		unity_from_matlab[1] == 1: correct classification of target
-		//		unity_from_matlab[1] == 2: incorrect classification of target
-		//		unity_from_matlab[1] == 3: correct classification of distractor
-		//		unity_from_matlab[1] == 4: incorrect classification of distractor
 		// unity_from_matlab[2] is the confidence of the classification for the given billboard 
-	Debug.Log("confidence: " + unity_from_matlab[2]);
-	if (unity_from_matlab[2] > 4.0/5.0) // correct classification of target with confidence > 2/3
-	{
-		feedback_object = Instantiate(feedback_sphere[0], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-	}
-	if (unity_from_matlab[2] > 3.0/5.0 && unity_from_matlab[2] < 4.0/5.0) // correct classification of target with confidence > 2/3
-	{
-		feedback_object = Instantiate(feedback_sphere[1], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-	}
-	if (unity_from_matlab[2] > 2.0/5.0 && unity_from_matlab[2] < 3.0/5.0) // correct classification of target with confidence > 2/3
-	{
-		feedback_object = Instantiate(feedback_sphere[2], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-	}
-	if (unity_from_matlab[2] > 1.0/5.0 && unity_from_matlab[2] < 2.0/5.0) // correct classification of target with confidence > 2/3
-	{
-		feedback_object = Instantiate(feedback_sphere[3], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-	}
-	if (unity_from_matlab[2] < 1.0/5.0) // correct classification of target with confidence > 2/3
-	{
-		Debug.Log("unity from matlab0"+ unity_from_matlab[0]);
-		feedback_object = Instantiate(feedback_sphere[4], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-	}
 
+	// Map the confidence from 0-1 to an int between 0-5 
+	sphere_num = Mathf.Round(5*unity_from_matlab[2]);
+	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
 
-//	if (unity_from_matlab[1] == 1 && unity_from_matlab[2] > 2.0/3.0) // correct classification of target with confidence > 2/3
+	//09/26/2017
+//	if (unity_from_matlab[2] > 4.0/5.0) // correct classification of target with confidence > 2/3
 //	{
 //		feedback_object = Instantiate(feedback_sphere[0], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
 //	}
-//	if (unity_from_matlab[1] == 1 && unity_from_matlab[2] > 1.0/3.0 && unity_from_matlab[2] < 2.0/3.0) // correct classification of target with confidence > 1/3
+//	if (unity_from_matlab[2] > 3.0/5.0 && unity_from_matlab[2] < 4.0/5.0) // correct classification of target with confidence > 2/3
 //	{
 //		feedback_object = Instantiate(feedback_sphere[1], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
 //	}
-//	if (unity_from_matlab[1] == 1 && unity_from_matlab[2] < 1.0/3.0) // correct classification of target with confidence > 1/3
+//	if (unity_from_matlab[2] > 2.0/5.0 && unity_from_matlab[2] < 3.0/5.0) // correct classification of target with confidence > 2/3
 //	{
 //		feedback_object = Instantiate(feedback_sphere[2], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
 //	}
-//
-//	if (unity_from_matlab[1] == 2 && unity_from_matlab[2] > 2.0/3.0) // incorrect classification of target with confidence > 2/3
-//	{
-//		feedback_object = Instantiate(feedback_sphere[5], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-//	}
-//	if (unity_from_matlab[1] == 2 && unity_from_matlab[2] > 1.0/3.0 && unity_from_matlab[2] < 2.0/3.0) // incorrect classification of target with confidence > 1/3
-//	{
-//		feedback_object = Instantiate(feedback_sphere[4], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-//	}
-//	if (unity_from_matlab[1] == 2 && unity_from_matlab[2] < 1.0/3.0) // incorrect classification of target with confidence > 1/3
+//	if (unity_from_matlab[2] > 1.0/5.0 && unity_from_matlab[2] < 2.0/5.0) // correct classification of target with confidence > 2/3
 //	{
 //		feedback_object = Instantiate(feedback_sphere[3], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
 //	}
-//
-//	if (unity_from_matlab[1] == 3 && unity_from_matlab[2] > 2.0/3.0) // correct classification of distractor with confidence > 2/3
+//	if (unity_from_matlab[2] < 1.0/5.0) // correct classification of target with confidence > 2/3
 //	{
-//		feedback_object = Instantiate(feedback_cube[0], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), Quaternion(0.0, 0.0, 0.0, 0));
-//	}
-//	if (unity_from_matlab[1] == 3 && unity_from_matlab[2] > 1.0/3.0 && unity_from_matlab[2] < 2.0/3.0) // correct classification of distractor with confidence > 1/3
-//	{
-//		feedback_object = Instantiate(feedback_cube[1], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), Quaternion(0.0, 0.0, 0.0, 0));
-//	}
-//	if (unity_from_matlab[1] == 3 && unity_from_matlab[2] < 1.0/3.0) // correct classification of distractor with confidence > 1/3
-//	{
-//		feedback_object = Instantiate(feedback_cube[2], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), Quaternion(0.0, 0.0, 0.0, 0));
-//	}
-//
-//	if (unity_from_matlab[1] == 4 && unity_from_matlab[2] > 2.0/3.0) // incorrect classification of distractor with confidence > 2/3
-//	{
-//		feedback_object = Instantiate(feedback_cube[5], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), Quaternion(0.0, 0.0, 0.0, 0));
-//	}
-//	if (unity_from_matlab[1] == 4 && unity_from_matlab[2] > 1.0/3.0 && unity_from_matlab[2] < 2.0/3.0) // incorrect classification of distractor with confidence > 1/3
-//	{
-//		feedback_object = Instantiate(feedback_cube[4], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), Quaternion(0.0, 0.0, 0.0, 0));
-//	}
-//	if (unity_from_matlab[1] == 4 && unity_from_matlab[2] < 1.0/3.0) // incorrect classification of distractor with confidence > 1/3
-//	{
-//		feedback_object = Instantiate(feedback_cube[3], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), Quaternion(0.0, 0.0, 0.0, 0));
+//		feedback_object = Instantiate(feedback_sphere[4], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
 //	}
 }
 

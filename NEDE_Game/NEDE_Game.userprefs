@@ -1,9 +1,11 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Logging\GetScreenBounds_cubby.js">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Logging\PlaceAll.js">
     <Files>
-      <File FileName="Assets\Scripts\Logging\GetScreenBounds_cubby.js" Line="1" Column="1" />
-      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Logging\GetScreenBounds_cubby.js" Line="263" Column="1" />
+      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="647" Column="49" />
+      <File FileName="Assets\Standard Assets\LSL_BCI_Input.cs" Line="48" Column="3" />
+      <File FileName="Assets\Scripts\Movement\WaypointWalk.js" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

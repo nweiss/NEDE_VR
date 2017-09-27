@@ -251,10 +251,6 @@ function UpdateObject (isCamGoingUp: boolean, objNum: int) {
 	if (!rayCastHitBillboard) 
 	{
 		fractionVisible = 0;
-		//boundsRect = Rect(0,0,0,0);
-		if (objNum+1==8){
-		Debug.Log("return1");
-		}
 		return fractionVisible;
 	}
 
@@ -264,9 +260,7 @@ function UpdateObject (isCamGoingUp: boolean, objNum: int) {
 	if (Vector3.Dot(cam.transform.forward, cornerDirection) < 1)
 	{
 		fractionVisible = 0;
-		if (objNum+1==8){
-		Debug.Log("return2");
-		}		return fractionVisible;
+		return fractionVisible;
 	}
 
 	

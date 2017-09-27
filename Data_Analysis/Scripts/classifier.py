@@ -108,8 +108,13 @@ while True:
     
             dwell_trial = dwell_time[counter_epoch]
             dwell_trial = np.reshape(dwell_trial,(1,) + dwell_trial.shape + (1,))
-    
-            probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
+
+            # BUG!!!            
+            #weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
+            #EEGnet.model.load_weights(weightsfilename)
+            #probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
+            probs = np.random.rand(1,2)
+            
             pred_class = np.argmax(probs)
             confidence = probs[0,1]
             stream_out = [billboard_id[counter_epoch], pred_class, confidence]
@@ -118,7 +123,7 @@ while True:
             #stream_out = [billboard_id[counter_epoch], np.round(3.0 * rand())+1, rand()]
             if SINGLE_TRIAL_FEEDBACK:
                 outlet.push_sample(stream_out)
-            print('Billboard No: %d    Classification: %d    Confidence: %f' %(stream_out[0], stream_out[1], stream_out[2]))
+                print('Billboard No: %d    Classification: %d    Confidence: %f' %(stream_out[0], stream_out[1], stream_out[2]))
     
             #t_prev = time.time()
             counter_epoch += 1
