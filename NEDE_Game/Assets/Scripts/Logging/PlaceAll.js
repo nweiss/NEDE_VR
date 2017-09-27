@@ -502,15 +502,13 @@ function LateUpdate() {
 
 		/***** Comment this section if running without online data streaming ******/
 		// The variable unity_from_matlab has three values for each billboard
-			// unity_from_matlab[0] is the number of the billboard
+			// unity_from_matlab[0] is the index of the billboard (0-indexed. 1 less than the objnumber unity assigns to each billboard)
 			// unity_from_matlab[1] is the classification of the billboard 
 			// unity_from_matlab[0] is the confidence of the classification for the given billboard
 		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
-		//Debug.Log(unity_from_matlab[0]);
 		//if Python has pushed a sample
-		if (unity_from_matlab[0] != 0){
-			//Debug.Log(unity_from_matlab[0]);
-			Debug.Log("Billboard #: " + unity_from_matlab[0] + "\t classified as: " + unity_from_matlab[1] + "\t confidence: " + unity_from_matlab[2]);
+		if (unity_from_matlab[2] != 0){
+			Debug.Log("Billboard #: " + unity_from_matlab[0]+1 + "\t classified as: " + unity_from_matlab[1] + "\t confidence: " + unity_from_matlab[2]);
 			//create graphic to show the classification of a billboard
 			CreateFeedback(unity_from_matlab);			
 
@@ -673,6 +671,7 @@ function CreateFeedback(unity_from_matlab : float[]) {
 //---END THE LEVEL AND DO CLEANUP
 //This function is called during the Update function, or by GuiSpeed script.
 function EndLevel() {
+	VR.VRSettings.enabled = false;
 
 	var LSLdata = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0];
 	Debug.Log("Exit Cue Sent");

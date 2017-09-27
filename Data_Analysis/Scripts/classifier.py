@@ -107,13 +107,13 @@ while True:
             pupil_trial = np.reshape(pupil_trial,(1,) + pupil_trial.shape + (1,))
     
             dwell_trial = dwell_time[counter_epoch]
-            dwell_trial = np.reshape(dwell_trial,(1,) + dwell_trial.shape + (1,))
+            dwell_trial = np.reshape(dwell_trial, (1,1,1))
 
             # BUG!!!            
-            #weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
-            #EEGnet.model.load_weights(weightsfilename)
-            #probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
-            probs = np.random.rand(1,2)
+            weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
+            EEGnet.model.load_weights(weightsfilename)
+            probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
+            #probs = np.random.rand(1,2)
             
             pred_class = np.argmax(probs)
             confidence = probs[0,1]

@@ -20,7 +20,7 @@ PLOTS = false;
 EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
 SUBJECT_ID = '11';
 BLOCK = '41'; % First block in batch
-nBLOCKS = 1; % Number of blocks to do in batch
+nBLOCKS = 2; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
@@ -242,7 +242,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     %   14) User button press
     %   15) Brake lights on
     %   16) Block start/end flag (1 for block start, 2 for block end)
-    unity_data = nan(16,floor(block_duration*freq_unity));
+    unity_data = zeros(16,floor(block_duration*freq_unity));
     unity_ts = nan(1,floor(block_duration*freq_unity));
 
     Billboard.isOnscreen = zeros(1, floor(block_duration * freq_unity));
