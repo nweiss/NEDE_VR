@@ -23,13 +23,12 @@ public class LSL_BCI_Input : MonoBehaviour {
 		}
 
 		// Create LSL stream inlet in Unity
-		//Debug.Log("Waiting for classifier stream from Python");
-		liblsl.StreamInfo[] results = liblsl.resolve_stream("name", "Python");
-
+		//liblsl.StreamInfo[] results = liblsl.resolve_stream("name", "Python");
 		// Create LSL stream inlet from Matlab
 		//liblsl.StreamInfo[] results = liblsl.resolve_stream("name", "NEDE_Stream_Response"); // 9/13/17
-		Inlet = new liblsl.StreamInlet(results[0]);
-		Debug.Log("Inlet Created: " + Inlet);
+
+//		Inlet = new liblsl.StreamInlet(results[0]);
+//		Debug.Log("Inlet Created: " + Inlet);
 	}
 
 	// pushLSL() function pushes data to the outlet

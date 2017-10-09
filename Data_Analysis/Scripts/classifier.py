@@ -85,7 +85,7 @@ while True:
     
         # If chunk is an epoch of data
         if epoch[-1,-1] == 0:
-            eeg[:,:,counter_epoch] = epoch[0:-2,:]
+            eeg[:,:,counter_epoch] = epoch[0:-2,0:385]
             head_rotation[counter_epoch,:] = epoch[-2,0:head_rotation.shape[1]]
             stimulus_type[counter_epoch] = epoch[-1,0]
             billboard_id[counter_epoch] = epoch[-1,1]
