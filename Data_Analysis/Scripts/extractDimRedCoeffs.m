@@ -3,8 +3,8 @@ clear all; clc; close all;
 
 %% Settings
 SUBJECT = 11;
-nBLOCKS = 40;
-SAVE_ON = true;
+nBLOCKS = 3;
+SAVE_ON = false;
 
 DEAD_CHANNELS = 33;
 
@@ -59,6 +59,9 @@ for BLOCK = 1:nBLOCKS
     EEG.compiled = [EEG.compiled, EEG.downsampled];
 end
 disp('Finished compiling EEG data')
+
+% Identify bad channels
+
 
 % Find PCA_coeff and clean with PCA
 [pca_coeff,pca_score,latent] = pca(EEG.compiled','NumComponents',20);
