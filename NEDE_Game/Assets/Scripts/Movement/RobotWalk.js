@@ -169,8 +169,6 @@ function Update () {
 
 				if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
 					Debug.Log("Passed final obj at time: " + Time.time);
-					//wait();
-					//Debug.Log("Exit level at time: " + Time.time);
 					EndWalk();
 				}
 				// update moves
@@ -248,7 +246,9 @@ function FindNextMove(currentPosition: Vector2, currentTarget: Vector2, nextTarg
 // Finish the walk by either ending the level or destroying the script
 function EndWalk() {
 	// The delay allows the unity level to continue until after the full epoch of head-rotation data is collected. For VR version only.
-	yield WaitForSeconds(1.0);
+	Debug.Log("Starting EndWalk() at time: " + Time.time);
+	yield WaitForSeconds(.9);
+	Debug.Log("Time after delay: " + Time.time);
 	var placerScript = gameObject.GetComponent(PlaceAll);
 	if (placerScript!=null) { // if this is the object in charge of the trial (the camera with PlaceAll attached), end the level
 		placerScript.EndLevel();

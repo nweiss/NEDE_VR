@@ -14,13 +14,13 @@ CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
 SAVE_RAW_DATA = false;
-SAVE_EPOCHED_DATA = true;
+SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '100';
-BLOCK = '10'; % First block in batch
-nBLOCKS = 20; % Number of blocks to do in batch
+SUBJECT_ID = '12';
+BLOCK = '1'; % First block in batch
+nBLOCKS = 10; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
@@ -243,6 +243,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     %   15) Brake lights on
     %   16) Block start/end flag (1 for block start, 2 for block end)
     unity_data = zeros(16,floor(block_duration*freq_unity));
+    unity_data(7,:) = -1*ones(1,size(unity_data,2)); %Initialize this to -1 bc 0 is a valid billboard id
     unity_ts = nan(1,floor(block_duration*freq_unity));
 
     Billboard.isOnscreen = zeros(1, floor(block_duration * freq_unity));
