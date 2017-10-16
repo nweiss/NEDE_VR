@@ -119,7 +119,7 @@ function Start () {
 //	} else {
 //		Debug.Log('Only one display detected');
 //	}
-	var LSLdata = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0];
 	Debug.Log("Start Cue Sent");
 	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
     //====================================
@@ -401,7 +401,7 @@ function Update () {
 
 function LateUpdate() {
 
-	var LSLdata = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0];
 
 	var camObject = GameObject.Find("Cams"); // Track the direction that MainCamera is moving in
 	var VRcamObject = GameObject.Find("VRCamera");
@@ -432,9 +432,6 @@ function LateUpdate() {
 
 				//Record visibility
 				if (fractionVisible > .01) {
-//					Debug.Log("On Right?:" + isObjectOnRight);
-//					Debug.Log(Time.time);
-//					Debug.Log("Object num:" + i);
 					isObjInView = true;               
                     if(thisObj.tag == "TargetObject") {
                     	isTarget = 1;
@@ -443,20 +440,10 @@ function LateUpdate() {
                     	isTarget = 2;
                     }
 
-                    var objCategory = 0;
-                    if (thisObj.name.Contains("car")){
-                    	objCategory = 1;
-                    }
-                    if (thisObj.name.Contains("piano")){
-                    	objCategory = 2;
-                    }
-                    if (thisObj.name.Contains("lap")){
-                    	objCategory = 3;
-                    }
-                    if (thisObj.name.Contains("schoon")){
-                    	objCategory = 4;
-                    }
-	             
+                    ret = parseBillboardName(thisObj.name);
+                    objCategory = ret[0];
+                    imageNo = ret[1];
+
 					LSLdata[0] = boundsScript.boundsRect.x; //*oculusPixelWidth/empiricalPixelWidth; // Hack to solve the problem of the units being off
 					LSLdata[1] = boundsScript.boundsRect.y; //*oculusPixelHeight/empiricalPixelHeight;
 					LSLdata[2] = boundsScript.boundsRect.width; //*oculusPixelWidth/empiricalPixelWidth;
@@ -472,6 +459,7 @@ function LateUpdate() {
 					LSLdata[12] = carRotation[2];
 					LSLdata[13] = isButtonPress;
 					LSLdata[14] = isBrakeLights;
+					LSLdata[15] = imageNo;
 				}
 			}
 		}
@@ -491,6 +479,7 @@ function LateUpdate() {
 			LSLdata[12] = carRotation[2];
 			LSLdata[13] = isButtonPress;
 			LSLdata[14] = isBrakeLights;
+			LSLdata[15] = 0;
 		}
 
 		/* ONLNINE STREAMING */
@@ -643,28 +632,6 @@ function CreateFeedback(unity_from_matlab : float[]) {
 	// Map the confidence from 0-1 to an int between 0-5 
 	sphere_num = Mathf.Round(5*unity_from_matlab[2]);
 	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-
-	//09/26/2017
-//	if (unity_from_matlab[2] > 4.0/5.0) // correct classification of target with confidence > 2/3
-//	{
-//		feedback_object = Instantiate(feedback_sphere[0], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-//	}
-//	if (unity_from_matlab[2] > 3.0/5.0 && unity_from_matlab[2] < 4.0/5.0) // correct classification of target with confidence > 2/3
-//	{
-//		feedback_object = Instantiate(feedback_sphere[1], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-//	}
-//	if (unity_from_matlab[2] > 2.0/5.0 && unity_from_matlab[2] < 3.0/5.0) // correct classification of target with confidence > 2/3
-//	{
-//		feedback_object = Instantiate(feedback_sphere[2], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-//	}
-//	if (unity_from_matlab[2] > 1.0/5.0 && unity_from_matlab[2] < 2.0/5.0) // correct classification of target with confidence > 2/3
-//	{
-//		feedback_object = Instantiate(feedback_sphere[3], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-//	}
-//	if (unity_from_matlab[2] < 1.0/5.0) // correct classification of target with confidence > 2/3
-//	{
-//		feedback_object = Instantiate(feedback_sphere[4], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
-//	}
 }
 
 //---END THE LEVEL AND DO CLEANUP
@@ -672,7 +639,7 @@ function CreateFeedback(unity_from_matlab : float[]) {
 function EndLevel() {
 	VR.VRSettings.enabled = false;
 
-	var LSLdata = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0];
+	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.0];
 	Debug.Log("Exit Cue Sent");
 	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
 
@@ -691,4 +658,32 @@ function EndLevel() {
 //This program is called if the user ends the level by pressing the play button or closing the window
 function OnApplicationQuit() { 
 	EndLevel(); //Still do cleanup/exit script so our data is saved properly.
+}
+
+function parseBillboardName(name: String) : int[] {
+	//Find the object category
+    if (name.Contains("car")){ //car_side
+    	objCategory = 1;
+    }
+    if (name.Contains("gra")){ //grand_piano
+    	objCategory = 2;
+    }
+    if (name.Contains("lap")){ //laptop
+    	objCategory = 3;
+    }
+    if (name.Contains("sch")){ //schooner
+    	objCategory = 4;
+    }
+
+    //Find the image number (ie 32 for the image car_side_32.jpg)
+    // For a two digit image name (ie car_side_32)
+    if (name[name.Length-3] == "-") {
+    	imageNo = parseInt(name[name.Length-2:name.Length]);
+    }
+	// For a one digit image name (ie car_side_2)
+    else {
+    	imageNo = parseInt(name[name.Length-1].ToString());
+    }
+    ret = [objCategory,imageNo];
+    return ret;
 }

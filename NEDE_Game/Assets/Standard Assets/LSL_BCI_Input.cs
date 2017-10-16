@@ -13,7 +13,7 @@ public class LSL_BCI_Input : MonoBehaviour {
 	void Start(){
 
 		// Create LSL stream outlet from Unity
-		liblsl.StreamInfo UnityStream = new liblsl.StreamInfo ( "NEDE_Stream", "object_info", 16, 0, liblsl.channel_format_t.cf_float32, "NEDE_position" );
+		liblsl.StreamInfo UnityStream = new liblsl.StreamInfo ( "NEDE_Stream", "object_info", 17, 0, liblsl.channel_format_t.cf_float32, "NEDE_position" );
 		Outlet = new liblsl.StreamOutlet(UnityStream);
 		if (Outlet != null){
 			Debug.Log("LSL Stream outlet created");

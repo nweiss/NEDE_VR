@@ -13,13 +13,13 @@ PCA_ICA = false;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
-SAVE_RAW_DATA = true;
+SAVE_RAW_DATA = false;
 SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
 SUBJECT_ID = '100';
-BLOCK = '1'; % First block in batch
+BLOCK = '3'; % First block in batch
 nBLOCKS = 2; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
@@ -241,8 +241,9 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     %   13) Car Rotation around z-axis
     %   14) User button press
     %   15) Brake lights on
-    %   16) Block start/end flag (1 for block start, 2 for block end)
-    unity_data = zeros(16,floor(block_duration*freq_unity));
+    %   16) Image No (ie 32 for car_side_32.jpg)
+    %   17) Block start/end flag (1 for block start, 2 for block end)
+    unity_data = zeros(17,floor(block_duration*freq_unity));
     unity_data(7,:) = -1*ones(1,size(unity_data,2)); %Initialize this to -1 bc 0 is a valid billboard id
     unity_ts = nan(1,floor(block_duration*freq_unity));
 
@@ -251,6 +252,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     Billboard.id_unity_frames = -1*ones(1, floor(block_duration * freq_unity)); % -1 marks the absence of a billboard since 0 is a valid id
     Billboard.id = []; % Records the ids as they are fixated upon
     Billboard.stimulus_type = zeros(1, trials_per_block);
+    Billboard.imageNo = zeros(1, trials_per_block);
     Billboard.category = zeros(1, trials_per_block);
 
     Fixation.start_times = zeros(1,trials_per_block);
@@ -468,6 +470,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 if ~any(Billboard.id == unity_data(7, counter_unity))
                     Billboard.id = [Billboard.id unity_data(7, counter_unity)];
                     Billboard.stimulus_type(counter_billboard) = unity_data(5, counter_unity);
+                    Billboard.imageNo(counter_billboard) = unity_data(16,counter_unity);
                     Billboard.category(counter_billboard) = unity_data(6, counter_unity);
                     Fixation.start_times(counter_billboard) = eye_ts(counter_eye);
                     Fixation.start_frame_eye(counter_billboard) = counter_eye;
@@ -568,7 +571,8 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     %    4 - (66,2) is the billboard id (unique identifier in unity for finding the position of the billboard)                
                     %    5 - (66,3) is the dwell time
                     %    6 - (66,4) is the billboard category (1=car, 2=grand piano, 3=laptops, 4=schooners)
-                    %    7 - (66,5:245) is the pupil dilation
+                    %    7 - (66,5) is the image number (ie 32 for car_side_32.jpg)
+                    %    7 - (66,6:246) is the pupil dilation
                     %    8 - (66,246:385) is zeros
                     %    9 - (66,385) is the cue. 1 to start the block, -1 to end it, and 0 throughout the
                     %    main loop, but is 1 when cuing python that matlab has
@@ -580,7 +584,8 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     Epoch.complete(end,2) = Billboard.id(counter_epoch);
                     Epoch.complete(end,3) = dwell_times(counter_epoch);
                     Epoch.complete(end,4) = Billboard.category(counter_epoch);
-                    Epoch.complete(end,5:size(Pupil.processed,2)+4) = Pupil.processed(counter_epoch,:);
+                    Epoch.complete(end,5) = Billboard.imageNo(counter_epoch);
+                    Epoch.complete(end,6:size(Pupil.processed,2)+5) = Pupil.processed(counter_epoch,:);
 
                     % Push data to python
                     outlet.push_chunk(Epoch.complete);               
@@ -710,11 +715,13 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         head_rotation(trials_missed,:) = [];
         Billboard.stimulus_type(trials_missed) = [];
         Billboard.category(trials_missed) = [];
+        Billboard.imageNo(trials_missed) = [];
 
         EEG = EEG.processed;
         pupil = Pupil.processed;
         stimulus_type = Billboard.stimulus_type;
         billboard_cat = Billboard.category;
+        image_no = Billboard.imageNo;
         target_category = target_category * ones(1,length(stimulus_type));
         
         % Check that you are not overwriting existing data file
@@ -729,7 +736,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
             disp(['New directory created for epoched data for subject ' SUBJECT_ID])
         end
         
-        save(SAVE_PATH_EPOCHED,'EEG','pupil','dwell_times','stimulus_type', 'head_rotation', 'billboard_cat', 'target_category');
+        save(SAVE_PATH_EPOCHED,'EEG','pupil','dwell_times','stimulus_type', 'head_rotation', 'billboard_cat', 'target_category','image_no');
         disp('Saved epoched data!')
     end
     disp(['Number of billboards that came onscreen: ', num2str(length(Billboard.ids_passed))])

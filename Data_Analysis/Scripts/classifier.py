@@ -14,9 +14,9 @@ from EEGNet import EEGNet
 #SETTINGS
 SAVE_EPOCHED_DATA = False
 SAVE_CLASSIFICATION_DATA = False
-SINGLE_TRIAL_FEEDBACK = True
+SINGLE_TRIAL_FEEDBACK = False
 BLOCK_PREDICTION = False
-EPOCH_VERSION = '3'
+EPOCH_VERSION = '6'
 TRAINING = False
 
 # Create LSL outlet
@@ -38,6 +38,7 @@ dwell_time = np.zeros((20))
 stimulus_type = np.zeros((20))
 billboard_id = np.zeros((20))
 billboard_cat = np.zeros((20))
+image_no = np.zeros((20))
 classification = np.zeros((20))
 confidence = np.zeros((20))
 target_cat = 0
@@ -91,7 +92,8 @@ while True:
             billboard_id[counter_epoch] = epoch[-1,1]
             dwell_time[counter_epoch] = epoch[-1,2]
             billboard_cat[counter_epoch] = epoch[-1,3]
-            pupil[counter_epoch,:] = epoch[-1, 4:245]
+            image_no[counter_epoch] = epoch[-1,4]
+            pupil[counter_epoch,:] = epoch[-1, 5:246]
     
             # Classify data
             # process data
@@ -109,11 +111,10 @@ while True:
             dwell_trial = dwell_time[counter_epoch]
             dwell_trial = np.reshape(dwell_trial, (1,1,1))
 
-            # BUG!!!            
-            weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
-            EEGnet.model.load_weights(weightsfilename)
-            probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
-            #probs = np.random.rand(1,2)
+            #weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
+            #EEGnet.model.load_weights(weightsfilename)
+            #probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
+            probs = np.random.rand(1,2)
             
             pred_class = np.argmax(probs)
             confidence = probs[0,1]
@@ -185,6 +186,6 @@ if SAVE_EPOCHED_DATA:
         os.makedirs(directory)
 
     target_cat = target_cat * np.ones((len(stimulus_type)))
-    scipy.io.savemat(filepath, {'EEG': eeg, 'stimulus_type': stimulus_type, 'billboard_id': billboard_id,'dwell_times': dwell_time, 'pupil': pupil, 'head_rotation': head_rotation, 'billboard_cat': billboard_cat, 'target_category': target_cat, 'classification': classification, 'confidence': confidence})
+    scipy.io.savemat(filepath, {'EEG': eeg, 'stimulus_type': stimulus_type, 'billboard_id': billboard_id,'dwell_times': dwell_time, 'pupil': pupil, 'head_rotation': head_rotation, 'billboard_cat': billboard_cat, 'image_no': image_no, 'target_category': target_cat, 'classification': classification, 'confidence': confidence})
     print('Data Saved')
 print('done')
