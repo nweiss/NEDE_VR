@@ -7,20 +7,20 @@ clc; clear all; close all;
 % Specify which systems are connected
 UNITY = true;
 PYTHON = false;
-EEG_connected = false;
-EYE_connected = false;
+EEG_connected = true;
+EYE_connected = true;
 PCA_ICA = false;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
-SAVE_RAW_DATA = false;
+SAVE_RAW_DATA = true;
 SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '12';
+SUBJECT_ID = '100';
 BLOCK = '1'; % First block in batch
-nBLOCKS = 40; % Number of blocks to do in batch
+nBLOCKS = 2; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
