@@ -243,8 +243,12 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     %   15) Brake lights on
     %   16) Image No (ie 32 for car_side_32.jpg)
     %   17) Block start/end flag (1 for block start, 2 for block end)
+<<<<<<< HEAD
+    unity_data = zeros(16,floor(block_duration*freq_unity));
+=======
     unity_data = zeros(17,floor(block_duration*freq_unity));
     unity_data(7,:) = -1*ones(1,size(unity_data,2)); %Initialize this to -1 bc 0 is a valid billboard id
+>>>>>>> 1128d15414a1b52b1a02ce86de7d1b30f145ed15
     unity_ts = nan(1,floor(block_duration*freq_unity));
 
     Billboard.isOnscreen = zeros(1, floor(block_duration * freq_unity));
@@ -523,21 +527,24 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 end
                 
                 %% Process head rotation data
-                % The rotation of the oculus that is recorded is the rotation
-                % relative to the rotation of the car. Correct for that.
-                % if the car rotation is 0
-                if max(car_rotation) < 1
-                    for i = 1:length(oculus_rotation)
-                        if oculus_rotation(i) > 180
-                            head_rotation(counter_epoch,i) = oculus_rotation(i)-360;
-                        else
-                            head_rotation(counter_epoch,i) = oculus_rotation(i);
-                        end
-                    end
-                else
-                    head_rotation(counter_epoch,:) = oculus_rotation - 180;
-                end
+%                 % The rotation of the oculus that is recorded is the rotation
+%                 % relative to the rotation of the car. Correct for that.
+%                 % if the car rotation is 0
+%                 if max(car_rotation) < 1
+%                     for i = 1:length(oculus_rotation)
+%                         if oculus_rotation(i) > 180
+%                             head_rotation(counter_epoch,i) = oculus_rotation(i)-360;
+%                         else
+%                             head_rotation(counter_epoch,i) = oculus_rotation(i);
+%                         end
+%                     end
+%                 else
+%                     head_rotation(counter_epoch,:) = oculus_rotation - 180;
+%                 end
 
+                % Get head rotation from oculus rotation and car rotation
+                head_rotation(counter_epoch,:) = processHeadRotation(oculus_rotation, car_rotation);
+                
                 %% Process EEG Data
                 % HP and LP Filter. Downsample.
                 EEG.filtered = filtfilt(Hd_hp.sosMatrix, Hd_hp.ScaleValues, EEG.epoch')';
