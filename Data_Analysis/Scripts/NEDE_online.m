@@ -7,8 +7,8 @@ clc; clear all; close all;
 % Specify which systems are connected
 UNITY = true;
 PYTHON = false;
-EEG_connected = true;
-EYE_connected = true;
+EEG_connected = false;
+EYE_connected = false;
 PCA_ICA = false;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab

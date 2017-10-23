@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Scenes/Startup.unity
+- path: Assets/Scenes/Grid.unity
   isLoaded: 1
   isActive: 1
