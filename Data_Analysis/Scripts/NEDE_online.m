@@ -1,19 +1,18 @@
 % Run VR NEDE experiment
 % Neil Weiss
-% 08/06/2017
 clc; clear all; close all;
 
 %% Settings
 % Specify which systems are connected
 UNITY = true;
 PYTHON = false;
-EEG_connected = false;
-EYE_connected = false;
+EEG_connected = true;
+EYE_connected = true;
 PCA_ICA = false;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
-SAVE_RAW_DATA = false;
+SAVE_RAW_DATA = true;
 SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
@@ -243,12 +242,8 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     %   15) Brake lights on
     %   16) Image No (ie 32 for car_side_32.jpg)
     %   17) Block start/end flag (1 for block start, 2 for block end)
-<<<<<<< HEAD
-    unity_data = zeros(16,floor(block_duration*freq_unity));
-=======
     unity_data = zeros(17,floor(block_duration*freq_unity));
     unity_data(7,:) = -1*ones(1,size(unity_data,2)); %Initialize this to -1 bc 0 is a valid billboard id
->>>>>>> 1128d15414a1b52b1a02ce86de7d1b30f145ed15
     unity_ts = nan(1,floor(block_duration*freq_unity));
 
     Billboard.isOnscreen = zeros(1, floor(block_duration * freq_unity));

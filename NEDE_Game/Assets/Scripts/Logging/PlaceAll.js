@@ -464,12 +464,6 @@ function LateUpdate() {
 			}
 		}
 		if (isObjInView == false) {
-			LSLdata[0] = 0;
-			LSLdata[1] = 0;
-			LSLdata[2] = 0;
-			LSLdata[3] = 0;
-			LSLdata[4] = 0;
-			LSLdata[5] = 0;
 			LSLdata[6] = -1.0; // Use -1 as the Billboard ID when no billboard is present because Billboard ID can take a value of 0.
 			LSLdata[7] = VRRotation[0];
 			LSLdata[8] = VRRotation[1];
@@ -479,7 +473,6 @@ function LateUpdate() {
 			LSLdata[12] = carRotation[2];
 			LSLdata[13] = isButtonPress;
 			LSLdata[14] = isBrakeLights;
-			LSLdata[15] = 0;
 		}
 
 		/* ONLNINE STREAMING */
