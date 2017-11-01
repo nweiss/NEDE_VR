@@ -99,6 +99,8 @@ var feedback_cube : GameObject[];
 var feedback_object : GameObject;
 var Startup_Object : GameObject;
 Startup_Object = GameObject.Find("StartupObject");
+var objectLocsFile : StreamWriter = new System.IO.StreamWriter("objectLocs.txt");
+
 //=========================================================
 
 //---STARTUP SCRIPT
@@ -122,6 +124,7 @@ function Start () {
 	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0];
 	Debug.Log("Start Cue Sent");
 	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
+
     //====================================
 
     Application.targetFrameRate = 90;
@@ -277,11 +280,10 @@ function Start () {
 			prefabs[i] = Resources.LoadAll(categories[i],GameObject);				
 			if (prefabs[i].length==0) {
 				prefabs[i] = Resources.LoadAll(categories[i],Texture2D);
-				is3dCategory[i] = false;			
+				is3dCategory[i] = false;
 			} else {
 				is3dCategory[i] = true;
 			}
-			// print(categories[i] + ": " + prefabs[i].length " items found");
 		}
 	}
 	
@@ -349,7 +351,7 @@ function Update () {
 		//log what we're doing
 //		eyelinkScript.write("----- LOAD TRIAL -----");
 		//Place distractors in the specified locations
-		PlaceObjects();		 
+		PlaceObjects(objectLocsFile);		 
 		 
 		//Determine times when the moving or pop-up object should be placed
 		//Makes the leading car break
@@ -519,7 +521,7 @@ function DestroyAll() {
 
 
 //---PLACE A SINGLE OBJECT AT THE GIVEN LOCATION, CHOSEN RANDOMLY
-function PlaceObject(location: Vector3, newrotation: Quaternion, parentcubby: GameObject, objType: String) {
+function PlaceObject(location: Vector3, newrotation: Quaternion, parentcubby: GameObject, objType: String, objectLocsFile: StreamWriter) {
 	//Set up
 	var i; //category number
 	var newTexture : Texture2D; //To be set multiple times in loop	
@@ -570,6 +572,8 @@ function PlaceObject(location: Vector3, newrotation: Quaternion, parentcubby: Ga
 		newObject.transform.localScale = Vector3(0.1,objectSize,objectSize); // to use 90deg rotation
 		newObject.transform.rotation = newrotation*Quaternion.AngleAxis(90,Vector3.up); // rotate 90deg so pic is not upside-down from either side
 		newObject.name = newTexture.name;
+
+		objectLocsFile.WriteLine(location[0] + "," + location[2] + "," + i + "," + j);
 	}
 
 	//Log object
@@ -600,7 +604,7 @@ function PlaceObject(location: Vector3, newrotation: Quaternion, parentcubby: Ga
 
 
 //---INSTANTIATE AN OBJECT IN EACH LOCATION
-function PlaceObjects() {
+function PlaceObjects(objectLocsFile: StreamWriter) {
 	//Set up
 	var newObject : Object; //object we just created
 	
@@ -610,9 +614,10 @@ function PlaceObjects() {
 		var isObject = (Random.value < objectPrevalence); //There is an objectPrevalence*100% chance that each location will contain an object
 		if (isObject) {
 			//Place a target or distractor
-			newObject = PlaceObject(positions[i],rotations[i],cubbies[i],"Stationary");
+			newObject = PlaceObject(positions[i],rotations[i],cubbies[i],"Stationary", objectLocsFile);
 		}
 	}
+	objectLocsFile.Close();
 }
 
 //---CREATE OBJECTS FOR CLOSED LOOP FEEDBACK
@@ -680,3 +685,13 @@ function parseBillboardName(name: String) : int[] {
     ret = [objCategory,imageNo];
     return ret;
 }
+
+function mapBillboardLocsToPathLocs(billboardLocs: Vector2[]){
+	// This function maps a location from (x,z) in world space in unity to the space in validDrivingMap.csv
+	// Will have to update to find the desired driving location for a given desired billboard location.
+	for (var i=0; i<billboardLocs.length; i++) {
+				
+		x = (5 + 5*Mathf.round(billboardLocs[i][0]/5))/5;
+		y = (5*Mathf.round(billboardLocs[i][0]/5))/5;
+	}
+};
