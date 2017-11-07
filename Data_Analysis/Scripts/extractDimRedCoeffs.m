@@ -2,12 +2,13 @@
 clear all; clc; close all;
 
 %% Settings
-SUBJECT = 11;
-nBLOCKS = 2;
+SUBJECT = 13;
+nBLOCKS = 40;
 REM_BAD_CHANS = true;
-REM_COMPS_FROM_ROTATION = true;
-SAVE_ON = false;
 BAD_CHAN_THRESH = 5; % Threshold for identifying bad channels. In Standard Deviations.
+REM_COMPS_FROM_ROTATION = true;
+thresh = 3; % Threshold for correlation between IC and rotation over which to remove component. In Z-score.
+SAVE_ON = true;
 
 %% Constants
 freq_eeg = 2048;
@@ -104,18 +105,18 @@ EEGlab = pop_runica(EEGlab,'icatype','runica');
 EEGlab.icaact = (EEGlab.icaweights*EEGlab.icasphere)*EEGlab.data(EEGlab.icachansind,:);
 
 % Find the independant components that correlate to head rotation
-save('tmp.mat')
-
 if REM_COMPS_FROM_ROTATION
-
+    % CHANGE THE EEG TO EEGlab.icaact. This was only for development
+    % version.
+    [ICs_from_HR,ICs_from_HRpos,ICs_from_HRvel,ICs_from_HRacc] = findICsFromRotation(EEGlab.icaact, headRotationAgg, thresh);
 end
 
 if SAVE_ON
     icaweights = EEGlab.icaweights;
     icasphere = EEGlab.icasphere;
     save_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',...
-        'dim_red_params','s11_dimredparams.mat');
-    save(save_path,'pca_coeff','icaweights','icasphere','badChanInd');
+        'dim_red_params',['s',num2str(SUBJECT),'_dimredparams.mat']);
+    save(save_path,'pca_coeff','icaweights','icasphere','badChanInd','ICs_from_HR','ICs_from_HRpos','ICs_from_HRvel','ICs_from_HRacc');
     
 end
 

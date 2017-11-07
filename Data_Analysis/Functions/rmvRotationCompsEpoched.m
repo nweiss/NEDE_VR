@@ -1,4 +1,4 @@
-function [cleanedEEG,compsFromRotation] = rmvRotationComps(EEG_ICs, headRotation)
+function [cleanedEEG,compsFromRotation] = rmvRotationCompsEpoched(EEG_ICs, headRotation)
 
 % Remove the components of the EEG that are caused by head rotation. Use
 % this function for data that is already epoched (ie a 3d EEG matrix). For
