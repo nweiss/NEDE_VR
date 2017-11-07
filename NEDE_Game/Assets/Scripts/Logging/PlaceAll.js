@@ -100,6 +100,9 @@ var feedback_object : GameObject;
 var Startup_Object : GameObject;
 Startup_Object = GameObject.Find("StartupObject");
 var objectLocsFile : StreamWriter = new System.IO.StreamWriter("objectLocs.txt");
+public var feedbackMaterials : Material[];
+var Rend: Renderer;
+public var closedLoop = false; // SETTING THAT TURNS ON AND OFF THE "FEEDBACK SPHERES" MARKING THE USERS INTEREST IN A BILLBOARD
 
 //=========================================================
 
@@ -352,6 +355,13 @@ function Update () {
 //		eyelinkScript.write("----- LOAD TRIAL -----");
 		//Place distractors in the specified locations
 		PlaceObjects(objectLocsFile);		 
+
+		// Place the feedback spheres
+		if (closedLoop) {
+			for (var i=0; i<positions.length; i++) {
+				CreateFeedback(i, 0.0);
+			}
+		}
 		 
 		//Determine times when the moving or pop-up object should be placed
 		//Makes the leading car break
@@ -496,6 +506,15 @@ function LateUpdate() {
 //			//create graphic to show the classification of a billboard
 //			CreateFeedback(unity_from_matlab);			
 //		}
+
+		
+	}
+
+	// Update colors of feedback spheres based on interest scores
+	if (closedLoop) {
+		if (Time.frameCount == 375) {
+			updateFeedback();
+		}
 	}
 	//===================================================================================
 
@@ -521,7 +540,7 @@ function DestroyAll() {
 
 
 //---PLACE A SINGLE OBJECT AT THE GIVEN LOCATION, CHOSEN RANDOMLY
-function PlaceObject(location: Vector3, newrotation: Quaternion, parentcubby: GameObject, objType: String, objectLocsFile: StreamWriter) {
+function PlaceObject(location: Vector3, newrotation: Quaternion, parentcubby: GameObject, objType: String, objectLocsFile: StreamWriter, objInd: int) {
 	//Set up
 	var i; //category number
 	var newTexture : Texture2D; //To be set multiple times in loop	
@@ -573,7 +592,7 @@ function PlaceObject(location: Vector3, newrotation: Quaternion, parentcubby: Ga
 		newObject.transform.rotation = newrotation*Quaternion.AngleAxis(90,Vector3.up); // rotate 90deg so pic is not upside-down from either side
 		newObject.name = newTexture.name;
 
-		objectLocsFile.WriteLine(location[0] + "," + location[2] + "," + i + "," + j);
+		objectLocsFile.WriteLine(location[0] + "," + location[2] + "," + i + "," + j + "," + objInd);
 	}
 
 	//Log object
@@ -614,22 +633,42 @@ function PlaceObjects(objectLocsFile: StreamWriter) {
 		var isObject = (Random.value < objectPrevalence); //There is an objectPrevalence*100% chance that each location will contain an object
 		if (isObject) {
 			//Place a target or distractor
-			newObject = PlaceObject(positions[i],rotations[i],cubbies[i],"Stationary", objectLocsFile);
+			newObject = PlaceObject(positions[i],rotations[i],cubbies[i],"Stationary", objectLocsFile, i);
 		}
 	}
 	objectLocsFile.Close();
 }
 
 //---CREATE OBJECTS FOR CLOSED LOOP FEEDBACK
-function CreateFeedback(unity_from_matlab : float[]) {
-	// The variable unity_from_matlab has three values for each billboard
-		// unity_from_matlab[0] is the number of the billboard
-		// unity_from_matlab[1] is the classification of the billboard
-		// unity_from_matlab[2] is the confidence of the classification for the given billboard 
-
+function CreateFeedback(objInd : int, interestScore : float) {
 	// Map the confidence from 0-1 to an int between 0-5 
-	sphere_num = Mathf.Round(5*unity_from_matlab[2]);
-	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[unity_from_matlab[0]].transform.position + Vector3(0, 2, 0), transform.rotation);
+	sphere_num = Mathf.Round(5*interestScore);
+	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[objInd].transform.position + Vector3(0, 2, 0), transform.rotation);
+	feedback_object.layer = LayerMask.NameToLayer("UI");
+	feedback_object.name = "feedback_obj" + objInd;
+}
+
+//---UPDATE OBJECTS IN CLOSED LOOP FEEDBACK
+function updateFeedback() {
+	try{
+		sr = new StreamReader("interestScores.txt");
+		line = sr.ReadLine();
+		objInd = 0;
+		while (line != null) {
+			line = sr.ReadLine();
+			objInd = objInd + 1;
+			interestScore = float.Parse(line);
+			materialNo = Mathf.Round(5*interestScore);
+			feedbackObj = GameObject.Find("feedback_obj" + objInd);
+			rend = feedbackObj.GetComponent.<Renderer>();
+			rend.sharedMaterial = feedbackMaterials[materialNo];
+		}
+		sr.Close();
+	}
+	catch (e) {
+		print("The interest score file could not be read.");
+		print(e.Message);
+	}
 }
 
 //---END THE LEVEL AND DO CLEANUP

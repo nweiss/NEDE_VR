@@ -6,15 +6,15 @@ clc; clear all; close all;
 % Specify which systems are connected
 UNITY = true;
 PYTHON = false;
-EEG_connected = true;
-EYE_connected = true;
+EEG_connected = false;
+EYE_connected = false;
 PCA_ICA = false;
 CLOSED_LOOP = false;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
-SAVE_RAW_DATA = true;
+SAVE_RAW_DATA = false;
 SAVE_EPOCHED_DATA = false;
-PLOTS = true;
+PLOTS = false;
 
 EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
 SUBJECT_ID = '100';
