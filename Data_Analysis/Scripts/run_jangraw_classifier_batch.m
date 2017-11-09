@@ -4,40 +4,36 @@
 % dilation, head-rotation, and dwell time.
 
 close all; clc; clear all;
-% Settings
-DATA_VERSION_NO = '5'; % version of the stored data
-SUBJECTS = [1,2,4,5,6,7,8];
-nFolds = 10;
-DISPLAY_SUBJ = 8;
 
+%% Settings
+DATA_VERSION_NO = '6'; % version of the stored data
+nFolds = 10;
+SAVE_ON = false;
+
+%% Paths
 DIR = fullfile('..','..','NEDE_Online');
 addpath(genpath(DIR));
 
-LOAD_PATH = fullfile('..','Data',['training_v',DATA_VERSION_NO],'training_data.mat');
+%% Load Data
+LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['training_v',DATA_VERSION_NO],'training_data.mat');
 load(LOAD_PATH);
 
+%% Misc
 % For data version 4: Update the format of the data so each subject has its own cell array
 if strcmp(DATA_VERSION_NO, '4')
     [billboard_cat,block,dwell_times,EEG,head_rotation,pupil,stimulus_type,subject,target_category] = array2cell(billboard_cat,block,dwell_times,EEG,head_rotation,pupil,stimulus_type,subject,target_category);
 end
     
+%% Main
+nSubjects = numel(subject);
+subjects = 1:nSubjects;
+
+for i = subjects
 %Use the absolute value of head rotation
-for i = 1:8
-    head_rotation{i} = abs(head_rotation{i});
-end
+head_rotation = abs(head_rotation);
 
 % Update the stimulus type so that (0=distractor,1=target)
-nTrials = nan(max(SUBJECTS),1);
-for i = 1:8
-    nTrials(i) = numel(billboard_cat{i});
-    targInd = stimulus_type{i}==1;
-    distInd = stimulus_type{i}==2;
-    nTarg = sum(targInd);
-    nDist = sum(distInd);
-    stimulus_type{i} = nan(nTrials(i),1);
-    stimulus_type{i}(targInd) = ones(nTarg,1);
-    stimulus_type{i}(distInd) = zeros(nDist,1);
-end
+stimulus_type = convertLabels(stimulus_type);
 
 % Shuffle the trials prior to partitioning them into training/testing sets
 % shuffleMap = cell(max(SUBJECTS),1);

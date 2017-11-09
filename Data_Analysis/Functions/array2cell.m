@@ -3,6 +3,9 @@ function [billboard_cat, block, dwell_times, EEG, head_rotation, pupil, stimulus
 % This function takes data from NEDE VR Experiment and converts it so that
 % there is a cell array for each subject.
 
+subjects = unique(subject);
+nSubjects = max(subjects);
+
 billboard_cat_tmp = billboard_cat;
 block_tmp = block;
 dwell_times_tmp = dwell_times;
@@ -14,17 +17,17 @@ subject_tmp = subject;
 target_category_tmp = target_category;
 clear 'billboard_cat' 'block' 'dwell_times' 'EEG' 'head_rotation' 'pupil' 'stimulus_type' 'subject' 'target_category'
 
-billboard_cat = cell(8,1);
-block = cell(8,1);
-dwell_times = cell(8,1);
-EEG = cell(8,1);
-head_rotation = cell(8,1);
-pupil = cell(8,1);
-stimulus_type = cell(8,1);
-subject = cell(8,1);
-target_category = cell(8,1);
+billboard_cat = cell(nSubjects,1);
+block = cell(nSubjects,1);
+dwell_times = cell(nSubjects,1);
+EEG = cell(nSubjects,1);
+head_rotation = cell(nSubjects,1);
+pupil = cell(nSubjects,1);
+stimulus_type = cell(nSubjects,1);
+subject = cell(nSubjects,1);
+target_category = cell(nSubjects,1);
 
-for i = 1:8
+for i = subjects
     billboard_cat{i} = billboard_cat_tmp(subject_tmp == i);
     block{i} = block_tmp(subject_tmp == i);
     dwell_times{i} = dwell_times_tmp(subject_tmp == i);

@@ -3,12 +3,13 @@
 % well as which subject and block it came from.
 clear all; clc; close all;
 
+%% SETTINGS
 DATA_VERSION_NO = '6';
-SAVE_ON = false;
+SAVE_ON = true;
 
 % Number of blocks recorded for each subject
-BLOCKS = [13,9,0,13,16,33,23,42,0,39,40];
-SUBJECTS = 11;%[1,2,4,5,6,7,8];
+BLOCKS = [13,9,0,13,16,33,23,42,0,39,40,0,40];
+SUBJECTS = 13; %[1,2,4,5,6,7,8];
 
 % Delete trials with extreme head rotation values. This happens occasionaly
 % on the last stimulus of a block if the game exits before the end of the
@@ -20,8 +21,12 @@ DELETE_EXT_HEAD_ROT = false;
 DELETE_EXT_EEG = false;
 threshold = 750;
 
+%% PATHS
 ERROR_BAR_PATH = fullfile('..', 'dependancies', 'shadedErrorBar');
 addpath(ERROR_BAR_PATH);
+
+FUNCTION_PATH = fullfile('..','Functions');
+addpath(FUNCTION_PATH);
 
 %% Main Script
 dwell_times_agg = [];
@@ -138,142 +143,19 @@ disp(['Fraction of trials pruned: ' num2str(1-length(stimulus_type_agg)/n_trials
 % pop_spectopo(EEGlab)
 % pop_spectopo(EEGlab, 1, [0, 1500], 'EEG')
 
-%% EEG plot
-electrode = 38;
-g = mean(EEG_agg(electrode,:,stimulus_type_agg == 1),3);
-h = std(EEG_agg(electrode,:,stimulus_type_agg == 1),[],3);
-h = h ./ sqrt(sum(stimulus_type_agg == 1));
-i = mean(EEG_agg(electrode,:,stimulus_type_agg == 2),3);
-j = std(EEG_agg(electrode,:,stimulus_type_agg == 2),[],3);
-j = j ./ sqrt(sum(stimulus_type_agg == 2));
-
-figure
-subplot(3,2,1)
-H1 = shadedErrorBar(linspace(-500, 1000, length(g)),g, h);
-hold on
-H2 = shadedErrorBar(linspace(-500, 1000, length(g)),i, j);
-legend([H1.mainLine, H2.mainLine], 'targets', 'distractors', 'Location', 'SouthWest')
-title('Electrode Fz')
-xlabel('Time (ms)')
-ylabel('Microvolts')
-
-electrode = 48;
-g = mean(EEG_agg(electrode,:,stimulus_type_agg == 1),3);
-h = std(EEG_agg(electrode,:,stimulus_type_agg == 1),[],3);
-h = h ./ sqrt(sum(stimulus_type_agg == 1));
-i = mean(EEG_agg(electrode,:,stimulus_type_agg == 2),3);
-j = std(EEG_agg(electrode,:,stimulus_type_agg == 2),[],3);
-j = j ./ sqrt(sum(stimulus_type_agg == 2));
-
-subplot(3,2,3)
-H3 = shadedErrorBar(linspace(-500, 1000, length(g)),g, h, 'r');
-hold on
-H4 = shadedErrorBar(linspace(-500, 1000, length(g)),i, j, 'b');
-title('Electrode Cz')
-xlabel('Time (ms)')
-ylabel('Microvolts')
-legend([H3.mainLine, H4.mainLine], 'targets', 'distractors','Location', 'SouthWest')
-
-
-electrode = 31;
-g = mean(EEG_agg(electrode,:,stimulus_type_agg == 1),3);
-h = std(EEG_agg(electrode,:,stimulus_type_agg == 1),[],3);
-h = h ./ sqrt(sum(stimulus_type_agg == 1));
-i = mean(EEG_agg(electrode,:,stimulus_type_agg == 2),3);
-j = std(EEG_agg(electrode,:,stimulus_type_agg == 2),[],3);
-j = j ./ sqrt(sum(stimulus_type_agg == 2));
-
-subplot(3,2,5)
-H5 = shadedErrorBar(linspace(-500, 1000, length(g)),g, h, 'r');
-hold on
-H6 = shadedErrorBar(linspace(-500, 1000, length(g)),i, j, 'b');
-title('Electrode Pz')
-xlabel('Time (ms)')
-ylabel('Microvolts')
-legend([H5.mainLine, H6.mainLine], 'targets', 'distractors', 'Location', 'SouthWest')
-
-
-%% Plots
-% Pupil plot
-a = mean(10*pupil_agg(stimulus_type_agg == 1,:),1);
-b = std(10*pupil_agg(stimulus_type_agg == 1,:),1);
-b = b./ sqrt(sum(stimulus_type_agg == 1));
-c = mean(10*pupil_agg(stimulus_type_agg == 2,:),1);
-d = std(10*pupil_agg(stimulus_type_agg == 2,:),1);
-d = d./ sqrt(sum(stimulus_type_agg == 2));
-
-%figure
-subplot(3,2,2)
-H7 = shadedErrorBar(linspace(-1000,3000,length(a)),a, b, 'r');
-hold on
-H8 = shadedErrorBar(linspace(-1000,3000,length(a)),c, d, 'b');
-legend([H7.mainLine, H8.mainLine], 'targets', 'distractors', 'Location', 'SouthWest')
-title('Pupil Dilation')
-xlabel('Time (ms)')
-ylabel('Area as Percentage of Subject Mean')
-
-%%
-% dwell time plot
-nTargets = sum(stimulus_type_agg == 1);
-nDistractors = sum(stimulus_type_agg == 2);
-dt_graph_targets = zeros(1,1500);
-dt_graph_distractors = zeros(1,1500);
-for i = 1:1500 % cycle through 1500 ms
-    for j = 1:length(stimulus_type_agg)
-       if stimulus_type_agg(j) == 1
-           if dwell_times_agg(j) >= i/1000
-                dt_graph_targets(i) = dt_graph_targets(i)+1;
-           end
-       end
-       if stimulus_type_agg(j) == 2
-           if dwell_times_agg(j) >= i/1000
-                dt_graph_distractors(i) = dt_graph_distractors(i)+1;
-           end
-       end
-   end
-end
-
-dt_graph_targets = dt_graph_targets./nTargets;
-dt_graph_distractors = dt_graph_distractors./nDistractors;
-
-%figure(4)
-subplot(3,2,6)
-plot(1:1500, dt_graph_targets, 'r', 1:1500, dt_graph_distractors, 'b')
-title('Dwell Times')
-xlabel('Time (ms)')
-ylabel('Fraction of Trials with Dwell Time > t')
-legend('Targets','Distractors', 'Location', 'SouthWest')
-
-%% Head Rotation
-l = mean(abs(head_rotation_agg(stimulus_type_agg == 1,:)),1);
-m = std(abs(head_rotation_agg(stimulus_type_agg == 1,:)),1);
-m = m ./ sqrt(sum(stimulus_type_agg == 1));
-n = mean(abs(head_rotation_agg(stimulus_type_agg == 2,:)),1);
-o = std(abs(head_rotation_agg(stimulus_type_agg == 2,:)),1);
-o = o ./ sqrt(sum(stimulus_type_agg == 2));
-
-%figure
-subplot(3,2,4)
-H9 = shadedErrorBar(linspace(-500,1500,length(l)),l, m, 'r');
-hold on
-H10 = shadedErrorBar(linspace(-500,1500,length(n)),n, o, 'b');
-legend([H9.mainLine, H10.mainLine],'targets', 'distractors', 'Location', 'NorthWest')
-title('Head Rotation')
-ylabel('|degrees|')
-xlabel('Time (ms)')
-
-EEG = EEG_agg;
-head_rotation = head_rotation_agg;
-pupil = pupil_agg;
-stimulus_type = stimulus_type_agg;
-dwell_times = dwell_times_agg;
-billboard_cat = billboard_cat_agg;
-target_category = target_category_agg;
-
-set(gcf,'Color','w');
-
 %% Save Data
-if SAVE_ON    
+if SAVE_ON
+    EEG = EEG_agg;
+    head_rotation = head_rotation_agg;
+    pupil = pupil_agg;
+    stimulus_type = stimulus_type_agg;
+    dwell_times = dwell_times_agg;
+    billboard_cat = billboard_cat_agg;
+    target_category = target_category_agg;
+    
+    % Convert data to have a seperate cell array for each subject
+    [billboard_cat, block, dwell_times, EEG, head_rotation, pupil, stimulus_type, subject, target_category] = array2cell(billboard_cat, block, dwell_times, EEG, head_rotation, pupil, stimulus_type, subject, target_category);
+
     SAVE_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox',...
             'Data', ['training_v' DATA_VERSION_NO], 'training_data.mat');
     save(SAVE_PATH, 'EEG', 'head_rotation', 'pupil', 'stimulus_type', 'dwell_times', 'billboard_cat', 'target_category', 'subject', 'block')
