@@ -16,8 +16,8 @@ SAVE_RAW_DATA = false;
 SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
-EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '13';
+EPOCHED_VERSION = 7; % Different versions of the data. Look at readme in data folder for details.
+SUBJECT_ID = '100';
 BLOCK = '1'; % First block in batch
 nBLOCKS = 1; % Number of blocks to do in batch
 

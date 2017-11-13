@@ -9,7 +9,11 @@ SAVE_ON = true;
 
 % Number of blocks recorded for each subject
 BLOCKS = [13,9,0,13,16,33,23,42,0,39,40,0,40];
+<<<<<<< HEAD:Data_Analysis/Scripts/aggregate_data.m
+SUBJECTS = 13;%[1,2,4,5,6,7,8];
+=======
 SUBJECTS = 13; %[1,2,4,5,6,7,8];
+>>>>>>> 5250b5d237729d5f51d16cceaeda20ea84bb6f81:Data_Analysis/Scripts/aggregateEpochedData.m
 
 % Delete trials with extreme head rotation values. This happens occasionaly
 % on the last stimulus of a block if the game exits before the end of the
@@ -39,7 +43,7 @@ target_category_agg = [];
 subject = [];
 block = [];
 
-for i = SUBJECTS
+for i = 13% SUBJECTS
     for j = 1:BLOCKS(i)
         clear dwell_time
         clear eeg
