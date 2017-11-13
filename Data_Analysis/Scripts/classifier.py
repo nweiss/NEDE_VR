@@ -22,7 +22,7 @@ TRAINING = False
 # Create LSL outlet
 info = StreamInfo('Python', 'classifications', 3)
 outlet = StreamOutlet(info)
-print("Outlet Created: Python->Unity")
+print("Outlet Created: Python->Matlab")
 
 # Create LSL inlet
 stream = resolve_byprop('name', 'Matlab->Python')
@@ -57,13 +57,13 @@ while True:
     #chunk, timestamps = inlet.pull_chunk(timeout = 1)
     chunk, timestamps = inlet.pull_chunk(timeout=.1)
     epoch = np.transpose(np.asarray(chunk))
-    if epoch.shape[0] != 0:        
+    if epoch.shape[0] != 0:
 
         # Check if chunk is cue end current block
         if epoch[-1,-1] == -1:
             BLOCK = int(epoch[-1,-2])
             print("***Finished block: ", BLOCK,"***")
-            
+
         # Check if chunk is cue to end the session
         if epoch[-1,-1] == -2:
             print("Ending session")
@@ -83,7 +83,7 @@ while True:
                     print('made directory: ' + directory)
                 if os.path.exists(filepath):
                     raise ValueError('Path already exists. Do not overwrite data!')
-    
+
         # If chunk is an epoch of data
         if epoch[-1,-1] == 0:
             eeg[:,:,counter_epoch] = epoch[0:-2,0:385]
@@ -94,38 +94,38 @@ while True:
             billboard_cat[counter_epoch] = epoch[-1,3]
             image_no[counter_epoch] = epoch[-1,4]
             pupil[counter_epoch,:] = epoch[-1, 5:246]
-    
+
             # Classify data
             # process data
             eeg_trial = eeg[:,:,counter_epoch]
             eeg_trial = np.reshape(eeg_trial,eeg_trial.shape + (1,))
             eeg_trial = np.transpose(eeg_trial,(2,0,1))
             eeg_trial = np.reshape(eeg_trial,eeg_trial.shape + (1,))
-    
+
             head_trial = head_rotation[counter_epoch,:]
             head_trial = np.reshape(head_trial,(1,) + head_trial.shape + (1,))
-    
+
             pupil_trial = pupil[counter_epoch,:]
             pupil_trial = np.reshape(pupil_trial,(1,) + pupil_trial.shape + (1,))
-    
+
             dwell_trial = dwell_time[counter_epoch]
             dwell_trial = np.reshape(dwell_trial, (1,1,1))
 
-            #weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
-            #EEGnet.model.load_weights(weightsfilename)
-            #probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
-            probs = np.random.rand(1,2)
-            
+            weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
+            EEGnet.model.load_weights(weightsfilename)
+            probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
+            #probs = np.random.rand(1,2)
+
             pred_class = np.argmax(probs)
             confidence = probs[0,1]
             stream_out = [billboard_id[counter_epoch], pred_class, confidence]
-    
+
             # random classifier
             #stream_out = [billboard_id[counter_epoch], np.round(3.0 * rand())+1, rand()]
             if SINGLE_TRIAL_FEEDBACK:
                 outlet.push_sample(stream_out)
                 print('Billboard No: %d    Classification: %d    Confidence: %f' %(stream_out[0], stream_out[1], stream_out[2]))
-    
+
             #t_prev = time.time()
             counter_epoch += 1
 
