@@ -12,7 +12,7 @@ disp('Opened inlet: Classifier -> Matlab');
 result = dlmread('../NEDE_Game/objectLocs.txt',',');
 
 % we should change this order and probably read these in from a file
-image_types = ['schooner' 'grand_piano' 'car_side' 'laptop'];
+image_types = {'schooner', 'grand_piano', 'car_side', 'laptop'};
 
 objectList = cell(1,length(result));
 billboardIdList = zeros(1,length(result));
@@ -21,7 +21,7 @@ for i = 1:length(result)
     image_type = result(i,3) + 1;
     pict_num = result(i,4) + 1;
     billboardIdList(i) = result(i,5);
-    full_string = strcat(image_types(image_type),'-',sprintf('%04d', pict_num)); %% get the number into the right string format
+    full_string = strcat(image_types{image_type},'-',sprintf('%04d', pict_num)); %% get the number into the right string format
     objectList{i} = full_string;
 end
 
@@ -40,8 +40,15 @@ while true
        % get the order the billboards should be visited in
        [outputOrder,outputScore,isSelfTunedTarget] = RerankObjectsWithTag(objectList,iTargets,nSensitivity,graph_1.graph);
        
+       % sort outputScore so it goes from billboard 0 - highest num
+       orderedScores = zeros(1,length(outputOrder));
        
+       for i = 0:length(outputOrder)-1
+       
+           
+       end
        % get the order of the rest of the b
+       
        
     
        num_classified = num_classified + 1;

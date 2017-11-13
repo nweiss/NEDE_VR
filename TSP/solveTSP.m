@@ -35,7 +35,7 @@ TEST = false;
 if TEST
     distmat = zeros(size(cities,1));
     for i=1:size(cities,1)
-        for j=1:size(cities,1);
+        for j=1:size(cities,1)
             if i~=j
                 dist = calcDistVec(cities([i j],:),1,usegridconstraints);
                 distmat(i,j) = dist(2);
@@ -49,7 +49,7 @@ end
     if nargin < 2
         display = false;
     end
-    if nargin<3
+    if nargin < 3
         usegridconstraints = false;
     end
     
@@ -123,13 +123,16 @@ function dist = calcDistVec( cord,offset,usegridconstraints )
 % dist = calcDistVec( cord,offset )
 % offset is the number of cities to calculate the distence between
 % the distance for the first city is allway 0
+% assume (x,z) cord: x in # of alleys, y in # of blocks on the ground
+% (tiles?)
 if usegridconstraints
     dist = zeros( size(cord,1)-offset+1,1 );    
-    temp = abs(cord( 1:end-offset,:) - cord( offset+1:end,:));    
+    temp = abs(cord( 1:end-offset,:) - cord( offset+1:end,:));
     temp(temp(:,2)==0 & temp(:,1)~=0,2) = 20; % if z coordinate is the same, you must go around to nearest hallway
     dist(2:end) = sum(temp,2);
 else % normal way   
-    dist = zeros( size(cord,1)-offset+1,1 );    
-    temp = cord( 1:end-offset,:) - cord( offset+1:end,:);
+    dist = zeros( size(cord,1)-offset+1,1 );  
+    %temp = cord( 1:end-offset,:) - cord( offset+1:end,:);
+    temp = 2*(cord(1:end-offset,1) - cord(offset+1:end,1)) + (cord(1:end-offset,2) - cord(1:end+offset,2));
     dist(2:end) = sqrt( sum(temp.^2,2) );
 end
