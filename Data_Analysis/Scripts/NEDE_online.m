@@ -4,7 +4,7 @@ clc; clear all; close all;
 
 %% Settings
 % Specify which systems are connected
-UNITY = true;
+UNITY = false;
 PYTHON = false;
 EEG_connected = false;
 EYE_connected = false;

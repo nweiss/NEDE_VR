@@ -1,3 +1,0 @@
-mcc -d ./../../binary/classifier_button -W cpplib:libmatrix -T link:lib -v daqdetect.m initialize.m waitTCPIPconnection.m 
-
-mcc -d ./../../binary/classifier_button -W cpplib:libmatrix -T link:lib -v daqdetect.m initialize.m waitTCPIPconnection.m closeTCPIPconnection.m 
