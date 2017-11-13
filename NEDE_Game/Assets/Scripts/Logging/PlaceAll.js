@@ -102,7 +102,7 @@ Startup_Object = GameObject.Find("StartupObject");
 var objectLocsFile : StreamWriter = new System.IO.StreamWriter("objectLocs.txt");
 public var feedbackMaterials : Material[];
 var Rend: Renderer;
-public var closedLoop = false; // SETTING THAT TURNS ON AND OFF THE "FEEDBACK SPHERES" MARKING THE USERS INTEREST IN A BILLBOARD
+public var closedLoop = true; // SETTING THAT TURNS ON AND OFF THE "FEEDBACK SPHERES" MARKING THE USERS INTEREST IN A BILLBOARD
 
 //=========================================================
 

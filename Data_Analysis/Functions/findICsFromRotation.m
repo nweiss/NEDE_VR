@@ -1,4 +1,4 @@
-function [ICs_from_HR,ICs_from_HRpos,ICs_from_HRvel,ICs_from_HRacc] = findICsFromRotation(EEG_ICs, headRotation, thresh)
+function [ICs_from_HR, cov_HRpos_IC_zscore, cov_HRvel_IC_zscore, cov_HRacc_IC_zscore] = findICsFromRotation(EEG_ICs, headRotation, thresh)
 
 % thresh - Threshold for correlation between an independant component and the head rotation over which to reject an independant component (in Z score)
 % ICs_from_HR - the independant components that are correlated with the
@@ -35,8 +35,10 @@ cov_HRacc_IC_zscore = zscore(abs(covmat(nComps+3,1:nComps)));
 
 figure
 plot([cov_HRpos_IC_zscore', cov_HRvel_IC_zscore', cov_HRacc_IC_zscore'],'.')
+hold on
+plot([1,nComps],[thresh,thresh], '--')
 title('Correlation of ICs to head-rotation')
-legend('position','velocity','acceleration')
+legend('position','velocity','acceleration','threshold')
 xlabel('Independant Component Num')
 ylabel('Z-score')
 
