@@ -4,7 +4,7 @@ clc; clear all; close all;
 
 %% Settings
 % Specify which systems are connected
-UNITY = true;
+UNITY = false;
 PYTHON = false;
 EEG_connected = false;
 EYE_connected = false;
@@ -17,7 +17,7 @@ SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 6; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '100';
+SUBJECT_ID = '13';
 BLOCK = '1'; % First block in batch
 nBLOCKS = 1; % Number of blocks to do in batch
 
