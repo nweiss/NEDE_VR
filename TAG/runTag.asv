@@ -69,9 +69,10 @@ while true
        display = 1;
        usegridconstraints = true;
        billboardLocations = result(1:2,unseenOutputOrder+1);
+       tspOutput = solveTSP( cities, display, usegridconstraints);
+              
        
-       pathLocations = convertBillboardtoPathLocation(billboardLocations);
-       tspOutput = solveTSP(pathLocations, display, usegridconstraints);       
-       dlmwrite('../NEDE_Game/newCarPath.txt', horzcat(tspOutput,zeros(1,length(tspOutput))));
+       
+       dlmwrite('../NEDE_Game/newCarPath.txt', tspOutput')
    end
 end
