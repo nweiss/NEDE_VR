@@ -127,9 +127,7 @@ function Start () {
 	
 	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0];
 	Debug.Log("Start Cue Sent");
-	Debug.Log("spot1");
 	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata);
-	Debug.Log("spot2");
 
     //====================================
 
@@ -302,7 +300,6 @@ function Start () {
 
 	this.enabled = true;
 	var prevObjNum = 1000;
-	Debug.Log("finishing start");
 }
 
 // Place photodiode square in upper right corner
@@ -319,7 +316,6 @@ function OnGUI () {
 
 //---NEW TRIAL SCRIPT
 function Update () {
-	Debug.Log("starting update");
 	isButtonPress = 0;
 
 	//UPDATE TIME FOR THIS FRAME
@@ -414,14 +410,12 @@ function Update () {
 			nextBrakeTime = t + Random.Range(minBrakeDelay,maxBrakeDelay); //set next brake time
 		}
 	}
-	Debug.Log("finished update");
 }
 
 //===================================================================================
 // LSL and VR Updates
 
 function LateUpdate() {
-	Debug.Log("starting LateUpdate");
 	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0];
 
 	var camObject = GameObject.Find("Cams"); // Track the direction that MainCamera is moving in
@@ -435,7 +429,6 @@ function LateUpdate() {
 		isCamGoingUp = true;
 	else
 		isCamGoingUp = false;
-	//Debug.Log("isCamGoingUp: " + isCamGoingUp);
 
 	//Update object screen bounds
 	if (recordObjBox) {
@@ -497,11 +490,7 @@ function LateUpdate() {
 		}
 
 		/* ONLNINE STREAMING */
-		
-		//01/09/2017
-		Debug.Log("spot3");
-		//Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
-		Debug.Log("spot4");
+		Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
 
 		//GameObject.Find("StartupObject").GetComponent("LSL_BCI_Output").pushLSL(LSLdata);
 
@@ -521,15 +510,15 @@ function LateUpdate() {
 
 	// Update colors of feedback spheres based on interest scores
 	if (closedLoop) {
-//		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
-//		//if matlab has pushed a sample
-//		if (unity_from_matlab[2] != 0){
-//			// if it is a cue to read in updates from TAG & TSP
-//			if(unity_from_matlab[0] == -1) {
-//			updateFeedback();
-//			walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
-//			}
-//		}
+		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
+		//if matlab has pushed a sample
+		if (unity_from_matlab[2] != 0){
+			// if it is a cue to read in updates from TAG & TSP
+			if(unity_from_matlab[0] == -1) {
+				updateFeedback();
+				walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+			}
+		}
 	}
 	//===================================================================================
 
