@@ -94,6 +94,12 @@ function ParseRouteFile(pointsFilename: String) {
 		//Now that the array of points is set, send it to built-in array for increased speed
 		points = arrayPoints.ToBuiltin(Vector2);
 		isObjectPoint = arrayIsObjPt.ToBuiltin(float);
+		Debug.Log("points:");
+		Debug.Log(points[0]);
+		Debug.Log(points[1]);
+		Debug.Log(points[2]);
+		Debug.Log(points[3]);
+		Debug.Log(points[4]);
 	}
 	yield;
 }
@@ -152,6 +158,7 @@ function StartRoute(iStartPoint: int) {
 
 // Determine current goal and move towards it
 function Update () { 
+	Debug.Log("Starting RobotWalk Update");
 	//Pause for a moment before we begin walking
 	if (Time.timeSinceLevelLoad<1.5) { 
 		return;
@@ -214,8 +221,7 @@ function Update () {
 			transform.Rotate(0,-Time.deltaTime * spinSpeed,0); //turn left
 		}
 	}
-	
-	
+	Debug.Log("Finished RobotWalk Update");
 } 
 
 

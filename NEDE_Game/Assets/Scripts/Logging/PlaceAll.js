@@ -74,7 +74,7 @@ private var trialEndTime = Mathf.Infinity; //Time when the current trial will en
 private var syncTime = 0.0; //time of next Eye/EEG sync signal
 private var eyelinkScript; //the script that passes messages to and receives eye positions from the eyetracker
 private var portIsSync = false; //is parallel port sending Constants.SYNC?
-private var walkScript; //the script that makes this object move
+var walkScript; //the script that makes this object move
 private var leaderWalkScript; //the script that makes a truck move
 private var leaderFlashScript; //the script that makes a truck's lights turn on and off
 private var brakeFactor = 0.2; // % of speed during braking
@@ -124,9 +124,12 @@ function Start () {
 //	} else {
 //		Debug.Log('Only one display detected');
 //	}
+	
 	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0];
 	Debug.Log("Start Cue Sent");
-	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
+	Debug.Log("spot1");
+	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata);
+	Debug.Log("spot2");
 
     //====================================
 
@@ -166,6 +169,9 @@ function Start () {
 		walkScript.nObjToSee = nObjToSee;
 		var lastOkStartPoint = walkScript.FindLastOkStartPoint();
 		startPoint = Mathf.FloorToInt(Random.Range(0,lastOkStartPoint)); //choose starting point randomly between 0 and lastOkStartPt-1
+		Debug.Log("randomized start point: " + startPoint);
+		startPoint = 0;
+		Debug.Log("actual start point: " + startPoint);
 		walkScript.moveSpeed = moveSpeed;
 		walkScript.StartRoute(startPoint);
 		if (presentationType==Constants.FOLLOW) {
@@ -296,6 +302,7 @@ function Start () {
 
 	this.enabled = true;
 	var prevObjNum = 1000;
+	Debug.Log("finishing start");
 }
 
 // Place photodiode square in upper right corner
@@ -312,6 +319,7 @@ function OnGUI () {
 
 //---NEW TRIAL SCRIPT
 function Update () {
+	Debug.Log("starting update");
 	isButtonPress = 0;
 
 	//UPDATE TIME FOR THIS FRAME
@@ -406,13 +414,14 @@ function Update () {
 			nextBrakeTime = t + Random.Range(minBrakeDelay,maxBrakeDelay); //set next brake time
 		}
 	}
+	Debug.Log("finished update");
 }
 
 //===================================================================================
 // LSL and VR Updates
 
 function LateUpdate() {
-
+	Debug.Log("starting LateUpdate");
 	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0];
 
 	var camObject = GameObject.Find("Cams"); // Track the direction that MainCamera is moving in
@@ -490,7 +499,9 @@ function LateUpdate() {
 		/* ONLNINE STREAMING */
 		
 		//01/09/2017
-		Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
+		Debug.Log("spot3");
+		//Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
+		Debug.Log("spot4");
 
 		//GameObject.Find("StartupObject").GetComponent("LSL_BCI_Output").pushLSL(LSLdata);
 
@@ -506,15 +517,19 @@ function LateUpdate() {
 //			//create graphic to show the classification of a billboard
 //			CreateFeedback(unity_from_matlab);			
 //		}
-
-		
 	}
 
 	// Update colors of feedback spheres based on interest scores
 	if (closedLoop) {
-		if (Time.frameCount == 375) {
-			updateFeedback();
-		}
+//		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
+//		//if matlab has pushed a sample
+//		if (unity_from_matlab[2] != 0){
+//			// if it is a cue to read in updates from TAG & TSP
+//			if(unity_from_matlab[0] == -1) {
+//			updateFeedback();
+//			walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+//			}
+//		}
 	}
 	//===================================================================================
 

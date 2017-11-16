@@ -14,13 +14,13 @@ from EEGNet import EEGNet
 #SETTINGS
 SAVE_EPOCHED_DATA = False
 SAVE_CLASSIFICATION_DATA = False
-SINGLE_TRIAL_FEEDBACK = False
+SINGLE_TRIAL_FEEDBACK = True
 BLOCK_PREDICTION = False
 EPOCH_VERSION = '6'
 TRAINING = False
 
 # Create LSL outlet
-info = StreamInfo('Python', 'classifications', 3)
+info = StreamInfo('Python->Matlab', 'classifications', 3)
 outlet = StreamOutlet(info)
 print("Outlet Created: Python->Matlab")
 

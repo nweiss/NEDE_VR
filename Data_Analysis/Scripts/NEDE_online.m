@@ -4,12 +4,12 @@ clc; clear all; close all;
 
 %% Settings
 % Specify which systems are connected
-UNITY = false;
-PYTHON = false;
+UNITY = true;
+PYTHON = true;
 EEG_connected = false;
 EYE_connected = false;
 PCA_ICA = false;
-CLOSED_LOOP = false;
+CLOSED_LOOP = true;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
 SAVE_RAW_DATA = false;
@@ -17,8 +17,8 @@ SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 7; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '100';
-BLOCK = '1'; % First block in batch
+SUBJECT_ID = '13';
+BLOCK = '100'; % First block in batch
 nBLOCKS = 1; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
@@ -29,7 +29,7 @@ function_path = fullfile('..','Functions');
 addpath(function_path);
 
 %% Load Data
-if (UNITY||EEG_connected||EYE_connected) == false
+if (EEG_connected||EYE_connected) == false
     % For simulation of matlab data processing code when no live signals
     % are being streamed
     LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',...
@@ -110,16 +110,16 @@ if UNITY||EEG_connected||EYE_connected||PYTHON
 end
 
 % Create outlet from matlab to unity
-if ~PYTHON && CLOSED_LOOP
-    info = lsl_streaminfo(lib, 'NEDE_Stream_Response', 'Markers', 3, 0,'cf_float32','sdfwerr32432');
-    outlet = lsl_outlet(info);
+if CLOSED_LOOP
+    info = lsl_streaminfo(lib, 'Matlab->Unity', 'Markers', 3, 0,'cf_float32','sdfwerr32432');
+    outlet_matlabToUnity = lsl_outlet(info);
     disp('Opened outlet: Matlab -> Unity');
 end
 
 % Create outlet from matlab to python
 if PYTHON
     info = lsl_streaminfo(lib,'Matlab->Python','data_epochs',66,0,'cf_float32', 'Matlab2015a');
-    outlet = lsl_outlet(info, 385, 385);
+    outlet_matlabToPython = lsl_outlet(info, 385, 385);
     disp('Opened outlet: Matlab -> Python');
     pause(2);
 end
@@ -160,8 +160,8 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     if UNITY
         result_unity = {};
         while isempty(result_unity) 
-            result_unity = lsl_resolve_byprop(lib,'name','NEDE_Stream'); 
-            disp('Waiting for: UNITY stream');
+            result_unity = lsl_resolve_byprop(lib,'name','Unity->Matlab'); 
+            disp('Waiting for: UNITY->Matlab stream');
         end    
         inlet_unity = lsl_inlet(result_unity{1});
         disp('Opened inlet: Unity -> Matlab');
@@ -182,6 +182,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         end
     end
     
+    
     if (PYTHON && CLOSED_LOOP)
         % Create the cue for python to start a new block
         %    1 - (66,385) is the start cue. 1 to start a block, -1 to end
@@ -197,8 +198,14 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         
         % Push data to python
         pause(1.5) % Need a delay between opening the outlet and pushing
-        outlet.push_chunk(startCuePython);
-        disp('Pushed start cue to python')
+        outlet_matlabToPython.push_chunk(startCuePython);
+        disp('Pushed start cue to python')       
+
+        % get inlet from Python->Matlab
+        result_classifier = lsl_resolve_byprop(lib,'name','Python->Matlab'); 
+        disp('Waiting for: Python->Matlab stream');
+        inlet_classifier = lsl_inlet(result_classifier{1});
+        disp('Opened inlet: Python->Matlab');
     end
     
     disp(['***STARTING BLOCK ', BLOCK,'***']);
@@ -253,6 +260,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     Billboard.stimulus_type = zeros(1, trials_per_block);
     Billboard.imageNo = zeros(1, trials_per_block);
     Billboard.category = zeros(1, trials_per_block);
+    classification = [];
 
     Fixation.start_times = zeros(1,trials_per_block);
     Fixation.stop_times = zeros(1,trials_per_block);
@@ -590,7 +598,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     Epoch.complete(end,6:size(Pupil.processed,2)+5) = Pupil.processed(counter_epoch,:);
 
                     % Push data to python
-                    outlet.push_chunk(Epoch.complete);               
+                    outlet_matlabToPython.push_chunk(Epoch.complete);               
                     disp(['Pushed Data: BillboardID-' num2str(Billboard.id(counter_epoch))])
                 end
                 
@@ -606,9 +614,8 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 disp(['captured epoch: ' num2str(counter_epoch)])
                 counter_epoch = counter_epoch + 1;
             end
-        end
-
-       %% Dummy classifier for matlab and unity mode (for debugging unity)
+       end
+    %% Dummy classifier for matlab and unity mode (for debugging unity)
        if UNITY && ~PYTHON && ~EEG_connected && ~EYE_connected && CLOSED_LOOP && (counter_unity ~= 1)
            % Once per billboard:
            if (unity_data(7,counter_unity)==0 && unity_data(7,counter_unity-1)~=0 && ~any(Billboard.id == unity_data(7,counter_unity-1))) %if a billboard has gone out of view
@@ -620,13 +627,28 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 end
                 classification = randi(2);
                 confidence = rand;
-                matlab_to_unity = [billboard_num classification, confidence];
-                outlet.push_sample(matlab_to_unity)
+                matlab_to_unity = [billboard_num, classification, confidence];
+                outlet_matlabToUnity.push_sample(matlab_to_unity)
                 disp('pushed to unity')
                 disp(['billboard number: ', num2str(billboard_num), '    classified as: ', num2str(classification), '    confidence: ', num2str(confidence)]);
             end
         end
-        counter_matlab = counter_matlab + 1;
+        
+        
+        %% Pull python classifier output and run TAG and TSP
+        if PYTHON
+            [a, b] = inlet_classifier.pull_sample(0);
+            if ~isempty(a)
+                classification = [classification; a];
+                if size(classification,1) == 5
+                    runTag(classification); 
+                end
+                % Send a cue to unity to read in the TAG and TSP solutions
+                % to update feedback-graphic and car path
+                outlet_matlabToUnity.push_sample([-1,0,0]);
+            end
+        end
+       counter_matlab = counter_matlab + 1;
     end
 
     %% Close block
@@ -661,7 +683,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         tmp = zeros(size(Epoch.complete,1),size(Epoch.complete,2));
         tmp(end,end) = -1;
         tmp(end,end-1) = target_category;
-        outlet.push_chunk(tmp);
+        outlet_matlabToPython.push_chunk(tmp);
     end
 
     %% Plots
@@ -776,13 +798,20 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
 end
 
 % Send set end cue to python and close outlet
-if CLOSED_LOOP || PYTHON
+if PYTHON
     setEndCue = zeros(dimChunkForPython);
     setEndCue(end,end) = -2;
-    outlet.push_chunk(setEndCue);
+    outlet_matlabToPython.push_chunk(setEndCue);
     pause(1.5); % Give python time to pick up the exit cue before closing the stream
-    outlet.delete()
-    disp('outlet closed')
+    outlet_matlabToPython.delete()
+    disp('Matlab->Python outlet closed')
+end
+
+% Close outlet to unity
+if CLOSED_LOOP
+    pause(1.5); % Give python time to pick up the exit cue before closing the stream
+    outlet_matlabToUnity.delete()
+    disp('Matlab->Unity outlet closed')
 end
 
 disp('done')
