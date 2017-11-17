@@ -2,8 +2,9 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Logging\PlaceAll.js">
     <Files>
-      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="85" Column="18" />
-      <File FileName="Assets\Standard Assets\LSL_BCI_Input.cs" Line="24" Column="4" />
+      <File FileName="Assets\Scripts\Movement\RobotWalk.js" Line="78" Column="26" />
+      <File FileName="Assets\Standard Assets\LSL_BCI_Input.cs" Line="48" Column="1" />
+      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="660" Column="45" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

@@ -45,7 +45,6 @@ public class LSL_BCI_Input : MonoBehaviour {
 	public float[] receiveLSL(){
 		float[] sample = new float[3];
 		double ts;
-		//ts = Inlet.pull_sample(sample, 0.0);
 		ts = Inlet.pull_sample(sample, 0.0);
 		return sample;
 	}

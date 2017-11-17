@@ -94,12 +94,6 @@ function ParseRouteFile(pointsFilename: String) {
 		//Now that the array of points is set, send it to built-in array for increased speed
 		points = arrayPoints.ToBuiltin(Vector2);
 		isObjectPoint = arrayIsObjPt.ToBuiltin(float);
-		Debug.Log("points:");
-		Debug.Log(points[0]);
-		Debug.Log(points[1]);
-		Debug.Log(points[2]);
-		Debug.Log(points[3]);
-		Debug.Log(points[4]);
 	}
 	yield;
 }
@@ -158,7 +152,6 @@ function StartRoute(iStartPoint: int) {
 
 // Determine current goal and move towards it
 function Update () { 
-	Debug.Log("Starting RobotWalk Update");
 	//Pause for a moment before we begin walking
 	if (Time.timeSinceLevelLoad<1.5) { 
 		return;
@@ -221,7 +214,6 @@ function Update () {
 			transform.Rotate(0,-Time.deltaTime * spinSpeed,0); //turn left
 		}
 	}
-	Debug.Log("Finished RobotWalk Update");
 } 
 
 
@@ -252,9 +244,7 @@ function FindNextMove(currentPosition: Vector2, currentTarget: Vector2, nextTarg
 // Finish the walk by either ending the level or destroying the script
 function EndWalk() {
 	// The delay allows the unity level to continue until after the full epoch of head-rotation data is collected. For VR version only.
-	Debug.Log("Starting EndWalk() at time: " + Time.time);
 	yield WaitForSeconds(.9);
-	Debug.Log("Time after delay: " + Time.time);
 	var placerScript = gameObject.GetComponent(PlaceAll);
 	if (placerScript!=null) { // if this is the object in charge of the trial (the camera with PlaceAll attached), end the level
 		placerScript.EndLevel();

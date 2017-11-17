@@ -111,7 +111,7 @@ while True:
             dwell_trial = dwell_time[counter_epoch]
             dwell_trial = np.reshape(dwell_trial, (1,1,1))
 
-            weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
+            weightsfilename = '../../../EEGnet-VR/weights/jenn/CombinedModelWeights_fold8.hf5'
             EEGnet.model.load_weights(weightsfilename)
             probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
             #probs = np.random.rand(1,2)

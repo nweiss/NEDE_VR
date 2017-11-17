@@ -512,12 +512,11 @@ function LateUpdate() {
 	if (closedLoop) {
 		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
 		//if matlab has pushed a sample
-		if (unity_from_matlab[2] != 0){
+		if (unity_from_matlab[0] == -1){
 			// if it is a cue to read in updates from TAG & TSP
-			if(unity_from_matlab[0] == -1) {
-				updateFeedback();
-				walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
-			}
+			Debug.Log("Cue to update feedback received");
+			updateFeedback();
+			walkScript.ParseRouteFile("NedeConfig/Grid.txt");
 		}
 	}
 	//===================================================================================
@@ -654,26 +653,20 @@ function CreateFeedback(objInd : int, interestScore : float) {
 
 //---UPDATE OBJECTS IN CLOSED LOOP FEEDBACK
 function updateFeedback() {
-	try{
-		sr = new StreamReader("interestScores.txt");
+	sr = new StreamReader("interestScores.txt");
+	for (var objInd=0; objInd<56; objInd++) {
 		line = sr.ReadLine();
-		objInd = 0;
-		while (line != null) {
-			line = sr.ReadLine();
-			objInd = objInd + 1;
-			interestScore = float.Parse(line);
-			materialNo = Mathf.Round(5*interestScore);
-			feedbackObj = GameObject.Find("feedback_obj" + objInd);
-			rend = feedbackObj.GetComponent.<Renderer>();
-			rend.sharedMaterial = feedbackMaterials[materialNo];
+		interestScore = float.Parse(line);
+		materialNo = Mathf.Round(5*interestScore);
+		feedbackObj = GameObject.Find("feedback_obj" + objInd);
+		rend = feedbackObj.GetComponent.<Renderer>();
+		rend.sharedMaterial = feedbackMaterials[materialNo];
 		}
-		sr.Close();
-	}
-	catch (e) {
-		print("The interest score file could not be read.");
-		print(e.Message);
-	}
+	sr.Close();
 }
+
+
+
 
 //---END THE LEVEL AND DO CLEANUP
 //This function is called during the Update function, or by GuiSpeed script.

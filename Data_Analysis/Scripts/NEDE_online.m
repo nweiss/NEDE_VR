@@ -8,6 +8,7 @@ UNITY = true;
 PYTHON = true;
 EEG_connected = false;
 EYE_connected = false;
+SIMULATE_DATA = true;
 PCA_ICA = false;
 CLOSED_LOOP = true;
 MARKER_STREAM = false; % Output event markers for BCI Lab
@@ -18,7 +19,7 @@ PLOTS = false;
 
 EPOCHED_VERSION = 7; % Different versions of the data. Look at readme in data folder for details.
 SUBJECT_ID = '13';
-BLOCK = '100'; % First block in batch
+BLOCK = '101'; % First block in batch
 nBLOCKS = 1; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
@@ -27,6 +28,12 @@ EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn
 % Add path to where functions livec
 function_path = fullfile('..','Functions');
 addpath(function_path);
+
+tag_path = fullfile('..','..','TAG');
+addpath(tag_path);
+
+tsp_path = fullfile('..','..','TSP');
+addpath(tsp_path);
 
 %% Load Data
 if (EEG_connected||EYE_connected) == false
@@ -69,6 +76,8 @@ blink_lower_thresh = 1.3;
 
 % Dimensions of the chunks we are pushing to python
 dimChunkForPython = [66, 385];
+
+initialPath = true;
 
 %% Create Filters
 % High Pass Filter for EEG
@@ -403,7 +412,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
 
         %% Stream in data (Live streaming mode)
         % Unity Stream
-        if UNITY 
+        if UNITY && ~SIMULATE_DATA
             [a, b] = inlet_unity.pull_sample(0);
             if ~isempty(a) % If Unity has moved to a new frame
                 update_unity = true;
@@ -600,6 +609,8 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     % Push data to python
                     outlet_matlabToPython.push_chunk(Epoch.complete);               
                     disp(['Pushed Data: BillboardID-' num2str(Billboard.id(counter_epoch))])
+                    disp('Epoch size')
+                    disp(size(Epoch.complete))
                 end
                 
                 % Push event data to marker stream
@@ -639,13 +650,22 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         if PYTHON
             [a, b] = inlet_classifier.pull_sample(0);
             if ~isempty(a)
+                disp('received classification from python');
                 classification = [classification; a];
-                if size(classification,1) == 5
-                    runTag(classification); 
+                
+                if initialPath
+                   oldPath = dlmread('../../NEDE_Game/NedeConfig/grid.txt',',');
+                   initialPath = false;
+                else
+                   oldPath = dlmread('../../NEDE_Game/NedeConfig/newCarPath.txt',',');
                 end
+                runTag(classification,oldPath);
                 % Send a cue to unity to read in the TAG and TSP solutions
                 % to update feedback-graphic and car path
                 outlet_matlabToUnity.push_sample([-1,0,0]);
+                disp('Cue to update feedback pushed');
+                disp(classification);
+                disp(size(oldPath))
             end
         end
        counter_matlab = counter_matlab + 1;
