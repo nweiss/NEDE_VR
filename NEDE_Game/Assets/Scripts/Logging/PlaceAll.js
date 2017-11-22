@@ -511,12 +511,16 @@ function LateUpdate() {
 	// Update colors of feedback spheres based on interest scores
 	if (closedLoop) {
 		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
-		//if matlab has pushed a sample
-		if (unity_from_matlab[0] == -1){
-			// if it is a cue to read in updates from TAG & TSP
-			Debug.Log("Cue to update feedback received");
+		//if matlab has pushed a cue to update the 
+		if (unity_from_matlab[0] < 0){
+			// if it is a cue to read in updates from TAG
+			Debug.Log("Cue to update feedback spheres received");
 			updateFeedback();
-			walkScript.ParseRouteFile("NedeConfig/Grid.txt");
+		}
+		if (unity_from_matlab[0] == -2){
+			delay(2.5);
+			walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+			Debug.Log("Cue to update path received");
 		}
 	}
 	//===================================================================================
@@ -720,6 +724,10 @@ function parseBillboardName(name: String) : int[] {
     }
     ret = [objCategory,imageNo];
     return ret;
+}
+
+function delay(delay_duration : float){
+	yield WaitForSeconds(delay_duration);
 }
 
 function mapBillboardLocsToPathLocs(billboardLocs: Vector2[]){

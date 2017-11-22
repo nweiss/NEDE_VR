@@ -1,15 +1,14 @@
 function startingLocation = getStartingLocation(billboardID,objLocs,oldPath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %billboardID = billboard ID from Unity. Int from 0-total number of
+    %billboardID: billboard ID from Unity that you most recently passed. Int from 0-total number of
     %billboards
-    %objLocs = Matrix that is (Num of billboards x 5). columns are: x, y,
+    %objLocs: Matrix that is (Num of billboards x 5). columns are: x, y,
     %image category, image number, billboard id
 
-    %oldPath = matrix (num of waypoints x 3). columns are x, y, number we
+    %oldPath: matrix (num of waypoints x 3). columns are x, y, number we
     %don't yet understand
     
-    % Returns:
-    % statingLocation: First point on the new path
+    % Returns: statingLocation: First point on the new path
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % look up billboard location from billboard ID

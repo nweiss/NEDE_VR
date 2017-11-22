@@ -19,7 +19,7 @@ PLOTS = false;
 
 EPOCHED_VERSION = 7; % Different versions of the data. Look at readme in data folder for details.
 SUBJECT_ID = '13';
-BLOCK = '101'; % First block in batch
+BLOCK = '13'; % First block in batch
 nBLOCKS = 1; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
@@ -609,8 +609,6 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     % Push data to python
                     outlet_matlabToPython.push_chunk(Epoch.complete);               
                     disp(['Pushed Data: BillboardID-' num2str(Billboard.id(counter_epoch))])
-                    disp('Epoch size')
-                    disp(size(Epoch.complete))
                 end
                 
                 % Push event data to marker stream
@@ -655,17 +653,21 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 
                 if initialPath
                    oldPath = dlmread('../../NEDE_Game/NedeConfig/grid.txt',',');
-                   initialPath = false;
                 else
                    oldPath = dlmread('../../NEDE_Game/NedeConfig/newCarPath.txt',',');
                 end
-                runTag(classification,oldPath);
-                % Send a cue to unity to read in the TAG and TSP solutions
-                % to update feedback-graphic and car path
-                outlet_matlabToUnity.push_sample([-1,0,0]);
-                disp('Cue to update feedback pushed');
-                disp(classification);
-                disp(size(oldPath))
+                pathUpdated = runTag(classification,oldPath);
+                if pathUpdated == true
+                    initialPath = false;
+                    % Send a cue to unity to read in the TAG and TSP solutions
+                    % to update feedback-graphic and car path
+                    outlet_matlabToUnity.push_sample([-2,0,0]);                    
+                else
+                    % Send a cue to unity to read in the TAG solution
+                    % without updating the path
+                    outlet_matlabToUnity.push_sample([-1,0,0]);
+
+                end
             end
         end
        counter_matlab = counter_matlab + 1;

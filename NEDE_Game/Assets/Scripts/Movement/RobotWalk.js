@@ -35,9 +35,9 @@ import System.IO; // for route file reading
 // Variables allow you to control the speed of motion.
 var moveSpeed = 3.0; //forward and back, in m/s?
 var turnRadius = 5;
-var points: Vector2[]; //array of points to hit
+public var points: Vector2[]; //array of points to hit
 var isObjectPoint: float[];
-var iPoint = 0;
+public var iPoint = 0;
 var iEndPoint = 20;
 var nObjToSee = 20;
 var nObjects = 0;
@@ -81,11 +81,13 @@ function ParseRouteFile(pointsFilename: String) {
 	 	var arrayIsObjPt = new Array();
 	 	// Read in line and add to array
 	 	nObjects = 0;
-	    for (line in lines) {	       	
-			coords = ReadLog.splitString(line,",");
-	       	arrayPoints.Push(Vector2(parseFloat(coords[0]),parseFloat(coords[1])));
-	       	arrayIsObjPt.Push(parseFloat(coords[2]));
-			nObjects = nObjects + parseFloat(coords[2]);
+	    for (line in lines) {
+	    	if (line.Length != 0) { //Ignore the empty last line of the file
+				coords = ReadLog.splitString(line,",");
+		       	arrayPoints.Push(Vector2(parseFloat(coords[0]),parseFloat(coords[1])));
+		       	arrayIsObjPt.Push(parseFloat(coords[2]));
+				nObjects = nObjects + parseFloat(coords[2]);
+			}
 	    }
 	    // Catch if error
 		if (arrayPoints.length==0) {
@@ -96,6 +98,10 @@ function ParseRouteFile(pointsFilename: String) {
 		isObjectPoint = arrayIsObjPt.ToBuiltin(float);
 	}
 	yield;
+
+	//NEIL
+	Debug.Log("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+	iPoint = 0;
 }
 
 
@@ -173,6 +179,11 @@ function Update () {
 				}
 				// update moves
 				currentMove = nextMove;
+				Debug.Log('current set of 3 points: ');
+				Debug.Log(points[iPoint-1][0] + ' ' + points[iPoint-1][1]);
+				Debug.Log(points[iPoint][0] + ' ' + points[iPoint][1]);
+				Debug.Log(points[iPoint+1][0] + ' ' + points[iPoint+1][1]);
+
 				nextMove = FindNextMove(points[iPoint-1], points[iPoint], points[iPoint+1]);
 				// get new target				
 				moveTarget = Vector3(points[iPoint].x, transform.position.y, points[iPoint].y);

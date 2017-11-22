@@ -1,5 +1,11 @@
-function runTag(classifier_outputs,oldPath)
+function [pathUpdated] = runTag(classifier_outputs,oldPath)
     
+    % pathUpdated is a boolean indicating whether or not there was
+    % confidence in enough billboards to update the car path
+    
+    disp('Old path shape:')
+    disp(size(oldPath))
+
     nSensitivity = 0.9;
     graph_1 = load('graph_3_tiny.mat');
     result_eye = {};
@@ -31,9 +37,7 @@ function runTag(classifier_outputs,oldPath)
     distractor_indices = classifier_outputs(:,2) == 0;
     confidence_scores = classifier_outputs(:,3);
     iTargets = classifier_outputs(target_indices,1);
-    % get the order the billboards should be visited in
-    disp('iTargets: ')
-    disp(iTargets)
+    % get the order the billboards should be visited i
     [outputOrder,outputScore,isSelfTunedTarget] = RerankObjectsWithTag(objectList,iTargets,nSensitivity,graph_1.graph);
 
     % sort outputScore so it goes from billboard 0 - highest num
@@ -64,14 +68,15 @@ function runTag(classifier_outputs,oldPath)
     dlmwrite('../../NEDE_Game/interestScores.txt',orderedScores','newline', 'pc', 'precision', '%1.5f');
     disp('Interest scores updated')
 
-    
-    if highProbTargets > 3
+    pathUpdated = false;
+    % Only run the TSP when there are several interesting objects in the
+    % environment and were not almost done with our path
+    if length(highProbTargets) > 1 && size(oldPath,1) > 2
+        pathUpdated = true;
         display = 0;
         usegridconstraints = true;
         billboardLocations = objLocs(unseenOutputOrder,1:2);
-    
-        disp('Entering getStartingLocation. Size of oldPath:')
-        disp(size(oldPath))        
+        
         startingLocation = getStartingLocation(classifier_outputs(end,1),objLocs,oldPath); 
     
         pathLocations = [startingLocation; convertBillboardtoPathLocation(billboardLocations)];
@@ -87,11 +92,11 @@ function runTag(classifier_outputs,oldPath)
             end
         end
         fullPath = [fullPath; tspOutput(i+1,:)];
-        dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline', 'pc');
-        disp('New Car Path Planned')
-        disp('New Car Path Length:')
-        disp(size(fullPath))
-
+        
+        % Interpolate waypoints in between the turns
+        fullPath = interpWaypoints(fullPath);
+        dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
+        disp('NEW CARPATH DEFINED')
     end
 end
 
