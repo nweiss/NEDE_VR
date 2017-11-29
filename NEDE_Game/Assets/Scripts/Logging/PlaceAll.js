@@ -444,6 +444,7 @@ function LateUpdate() {
 
 				//Record visibility
 				if (fractionVisible > .01) {
+					Debug.Log("OBJECT IN VIEW: " + Time.time);
 					isObjInView = true;               
                     if(thisObj.tag == "TargetObject") {
                     	isTarget = 1;
