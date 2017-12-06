@@ -446,6 +446,7 @@ function LateUpdate() {
 
 				//Record visibility
 				if (fractionVisible > .01) {
+					//Debug.Log("Object in view: " + Time.time);
 					isObjInView = true;               
                     if(thisObj.tag == "TargetObject") {
                     	isTarget = 1;
@@ -650,23 +651,32 @@ function PlaceObjects(objectLocsFile: StreamWriter) {
 function CreateFeedback(objInd : int, interestScore : float) {
 	// Map the confidence from 0-1 to an int between 0-5 
 	sphere_num = Mathf.Round(5*interestScore);
-	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[objInd].transform.position + Vector3(0, 2, 0), transform.rotation);
+	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[objInd].transform.position + Vector3(0, 3, 0), transform.rotation);
 	feedback_object.layer = LayerMask.NameToLayer("UI");
 	feedback_object.name = "feedback_obj" + objInd;
 }
 
 //---UPDATE OBJECTS IN CLOSED LOOP FEEDBACK
 function updateFeedback() {
-	sr = new StreamReader("interestScores.txt");
-	for (var objInd=0; objInd<56; objInd++) {
+	try{
+		sr = new StreamReader("interestScores.txt");
 		line = sr.ReadLine();
-		interestScore = float.Parse(line);
-		materialNo = Mathf.Round(5*interestScore);
-		feedbackObj = GameObject.Find("feedback_obj" + objInd);
-		rend = feedbackObj.GetComponent.<Renderer>();
-		rend.sharedMaterial = feedbackMaterials[materialNo];
+		objInd = 0;
+		while (line != null) {
+			interestScore = float.Parse(line);
+			materialNo = Mathf.Round(5*interestScore);
+			feedbackObj = GameObject.Find("feedback_obj" + objInd);
+			rend = feedbackObj.GetComponent.<Renderer>();
+			rend.sharedMaterial = feedbackMaterials[materialNo];
+			line = sr.ReadLine();
+			objInd = objInd + 1;
 		}
-	sr.Close();
+		sr.Close();
+	}
+	catch (e) {
+		print("The interest score file could not be read.");
+		print(e.Message);
+	}
 }
 
 

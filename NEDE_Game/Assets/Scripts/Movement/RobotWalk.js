@@ -100,7 +100,6 @@ function ParseRouteFile(pointsFilename: String) {
 	yield;
 
 	//NEIL
-	Debug.Log("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	iPoint = 0;
 }
 
