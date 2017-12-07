@@ -74,7 +74,7 @@ private var trialEndTime = Mathf.Infinity; //Time when the current trial will en
 private var syncTime = 0.0; //time of next Eye/EEG sync signal
 private var eyelinkScript; //the script that passes messages to and receives eye positions from the eyetracker
 private var portIsSync = false; //is parallel port sending Constants.SYNC?
-private var walkScript; //the script that makes this object move
+var walkScript; //the script that makes this object move
 private var leaderWalkScript; //the script that makes a truck move
 private var leaderFlashScript; //the script that makes a truck's lights turn on and off
 private var brakeFactor = 0.2; // % of speed during braking
@@ -124,9 +124,10 @@ function Start () {
 //	} else {
 //		Debug.Log('Only one display detected');
 //	}
+	
 	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0];
 	Debug.Log("Start Cue Sent");
-	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
+	Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata);
 
     //====================================
 
@@ -166,6 +167,9 @@ function Start () {
 		walkScript.nObjToSee = nObjToSee;
 		var lastOkStartPoint = walkScript.FindLastOkStartPoint();
 		startPoint = Mathf.FloorToInt(Random.Range(0,lastOkStartPoint)); //choose starting point randomly between 0 and lastOkStartPt-1
+		Debug.Log("randomized start point: " + startPoint);
+		startPoint = 0;
+		Debug.Log("actual start point: " + startPoint);
 		walkScript.moveSpeed = moveSpeed;
 		walkScript.StartRoute(startPoint);
 		if (presentationType==Constants.FOLLOW) {
@@ -412,7 +416,6 @@ function Update () {
 // LSL and VR Updates
 
 function LateUpdate() {
-
 	var LSLdata = [0.0,0.0,0.0,0.0,0.0,0.0,-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0];
 
 	var camObject = GameObject.Find("Cams"); // Track the direction that MainCamera is moving in
@@ -426,7 +429,6 @@ function LateUpdate() {
 		isCamGoingUp = true;
 	else
 		isCamGoingUp = false;
-	//Debug.Log("isCamGoingUp: " + isCamGoingUp);
 
 	//Update object screen bounds
 	if (recordObjBox) {
@@ -444,7 +446,7 @@ function LateUpdate() {
 
 				//Record visibility
 				if (fractionVisible > .01) {
-					Debug.Log("OBJECT IN VIEW: " + Time.time);
+					//Debug.Log("Object in view: " + Time.time);
 					isObjInView = true;               
                     if(thisObj.tag == "TargetObject") {
                     	isTarget = 1;
@@ -489,8 +491,6 @@ function LateUpdate() {
 		}
 
 		/* ONLNINE STREAMING */
-		
-		//01/09/2017
 		Startup_Object.GetComponent(LSL_BCI_Input).pushLSL(LSLdata); //adjust data sent accordingly, sampleData vs LSLdata for online vs offline 
 
 		//GameObject.Find("StartupObject").GetComponent("LSL_BCI_Output").pushLSL(LSLdata);
@@ -507,14 +507,21 @@ function LateUpdate() {
 //			//create graphic to show the classification of a billboard
 //			CreateFeedback(unity_from_matlab);			
 //		}
-
-		
 	}
 
 	// Update colors of feedback spheres based on interest scores
 	if (closedLoop) {
-		if (Time.frameCount == 375) {
+		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
+		//if matlab has pushed a cue to update the 
+		if (unity_from_matlab[0] < 0){
+			// if it is a cue to read in updates from TAG
+			Debug.Log("Cue to update feedback spheres received");
 			updateFeedback();
+		}
+		if (unity_from_matlab[0] == -2){
+			delay(2.5);
+			walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+			Debug.Log("Cue to update path received");
 		}
 	}
 	//===================================================================================
@@ -644,7 +651,7 @@ function PlaceObjects(objectLocsFile: StreamWriter) {
 function CreateFeedback(objInd : int, interestScore : float) {
 	// Map the confidence from 0-1 to an int between 0-5 
 	sphere_num = Mathf.Round(5*interestScore);
-	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[objInd].transform.position + Vector3(0, 2, 0), transform.rotation);
+	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[objInd].transform.position + Vector3(0, 3, 0), transform.rotation);
 	feedback_object.layer = LayerMask.NameToLayer("UI");
 	feedback_object.name = "feedback_obj" + objInd;
 }
@@ -656,13 +663,13 @@ function updateFeedback() {
 		line = sr.ReadLine();
 		objInd = 0;
 		while (line != null) {
-			line = sr.ReadLine();
-			objInd = objInd + 1;
 			interestScore = float.Parse(line);
 			materialNo = Mathf.Round(5*interestScore);
 			feedbackObj = GameObject.Find("feedback_obj" + objInd);
 			rend = feedbackObj.GetComponent.<Renderer>();
 			rend.sharedMaterial = feedbackMaterials[materialNo];
+			line = sr.ReadLine();
+			objInd = objInd + 1;
 		}
 		sr.Close();
 	}
@@ -671,6 +678,9 @@ function updateFeedback() {
 		print(e.Message);
 	}
 }
+
+
+
 
 //---END THE LEVEL AND DO CLEANUP
 //This function is called during the Update function, or by GuiSpeed script.
@@ -724,6 +734,10 @@ function parseBillboardName(name: String) : int[] {
     }
     ret = [objCategory,imageNo];
     return ret;
+}
+
+function delay(delay_duration : float){
+	yield WaitForSeconds(delay_duration);
 }
 
 function mapBillboardLocsToPathLocs(billboardLocs: Vector2[]){

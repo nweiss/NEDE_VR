@@ -10,11 +10,13 @@ public class LSL_BCI_Input : MonoBehaviour {
 	private liblsl.StreamInlet Inlet = null;
 
 	// Neil 12/07
-	void Start(){
-
+	public void Start(){
+		Debug.Log ("Creating Unity->Matlab stream");
 		// Create LSL stream outlet from Unity
-		liblsl.StreamInfo UnityStream = new liblsl.StreamInfo ( "NEDE_Stream", "object_info", 17, 0, liblsl.channel_format_t.cf_float32, "NEDE_position" );
-		Outlet = new liblsl.StreamOutlet(UnityStream);
+		if (Application.loadedLevel == 0) { //only create the outlet in the startup scene
+			liblsl.StreamInfo UnityStream = new liblsl.StreamInfo ("Unity->Matlab", "object_info", 17, 0, liblsl.channel_format_t.cf_float32, "NEDE_position");
+			Outlet = new liblsl.StreamOutlet (UnityStream);
+		}
 		if (Outlet != null){
 			Debug.Log("LSL Stream outlet created");
 		}
@@ -22,13 +24,12 @@ public class LSL_BCI_Input : MonoBehaviour {
 			Debug.Log("Error creating LSL stream outlet");
 		}
 
-		// Create LSL stream inlet in Unity
+		//Create LSL stream inlet in Unity
 		//liblsl.StreamInfo[] results = liblsl.resolve_stream("name", "Python");
-		// Create LSL stream inlet from Matlab
-		//liblsl.StreamInfo[] results = liblsl.resolve_stream("name", "NEDE_Stream_Response"); // 9/13/17
-
-//		Inlet = new liblsl.StreamInlet(results[0]);
-//		Debug.Log("Inlet Created: " + Inlet);
+		//Create LSL stream inlet from Matlab
+		liblsl.StreamInfo[] results = liblsl.resolve_stream("name", "Matlab->Unity");
+		Inlet = new liblsl.StreamInlet(results[0]);
+		Debug.Log("Inlet Created: " + Inlet);
 	}
 
 	// pushLSL() function pushes data to the outlet
@@ -45,7 +46,6 @@ public class LSL_BCI_Input : MonoBehaviour {
 		float[] sample = new float[3];
 		double ts;
 		ts = Inlet.pull_sample(sample, 0.0);
-		//ts = Inlet.pull_sample(sample, .0133);
 		return sample;
 	}
 }

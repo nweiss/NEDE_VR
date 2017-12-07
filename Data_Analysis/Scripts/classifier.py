@@ -14,13 +14,13 @@ from EEGNet import EEGNet
 #SETTINGS
 SAVE_EPOCHED_DATA = False
 SAVE_CLASSIFICATION_DATA = False
-SINGLE_TRIAL_FEEDBACK = False
+SINGLE_TRIAL_FEEDBACK = True
 BLOCK_PREDICTION = False
 EPOCH_VERSION = '6'
 TRAINING = False
 
 # Create LSL outlet
-info = StreamInfo('Python', 'classifications', 3)
+info = StreamInfo('Python->Matlab', 'classifications', 3)
 outlet = StreamOutlet(info)
 print("Outlet Created: Python->Matlab")
 
@@ -111,7 +111,7 @@ while True:
             dwell_trial = dwell_time[counter_epoch]
             dwell_trial = np.reshape(dwell_trial, (1,1,1))
 
-            weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold8.hf5'
+            weightsfilename = '../../../EEGnet-VR/weights/jenn/CombinedModelWeights_fold8.hf5'
             EEGnet.model.load_weights(weightsfilename)
             probs = EEGnet.model.predict([eeg_trial, head_trial, pupil_trial, dwell_trial])
             #probs = np.random.rand(1,2)
