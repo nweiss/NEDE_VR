@@ -98,9 +98,6 @@ function ParseRouteFile(pointsFilename: String) {
 		isObjectPoint = arrayIsObjPt.ToBuiltin(float);
 	}
 	yield;
-
-	//NEIL
-	iPoint = 0;
 }
 
 

@@ -2,9 +2,6 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
     
     % pathUpdated is a boolean indicating whether or not there was
     % confidence in enough billboards to update the car path
-    
-    disp('Old path shape:')
-    disp(size(oldPath))
 
     nSensitivity = 0.9;
     graph_1 = load('graph_3_tiny.mat');
@@ -37,6 +34,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
     distractor_indices = classifier_outputs(:,2) == 0;
     confidence_scores = classifier_outputs(:,3);
     iTargets = classifier_outputs(target_indices,1);
+    iDistractors = classifier_outputs(:,2) == 0;
     % get the order the billboards should be visited i
     [outputOrder,outputScore,isSelfTunedTarget] = RerankObjectsWithTag(objectList,iTargets,nSensitivity,graph_1.graph);
 
@@ -54,9 +52,9 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
     unseenOutputOrder = [];
     % make sure you don't go to the same billboard
     for i=1:length(highProbTargets)
-       if ismember(highProbTargets(i),target_indices)
+       if ismember(highProbTargets(i),iTargets)
            orderedScores(i) = confidence_scores(highProbTargets(i)+1);
-       elseif ismember(highProbTargets(i), distractor_indices)
+       elseif ismember(highProbTargets(i), iDistractors)
            orderedScores(i) = confidence_scores(highProbTargets(i)+1);
        else 
            unseenOutputOrder(counter) = highProbTargets(i);
@@ -66,18 +64,18 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
     
     % eliminate any scientific notation (ie 3.41e-5)
     dlmwrite('../../NEDE_Game/interestScores.txt',orderedScores','newline', 'pc', 'precision', '%1.5f');
-    disp('Interest scores updated')
+    disp('Interest scores updated.')
 
     pathUpdated = false;
     % Only run the TSP when there are several interesting objects in the
     % environment and were not almost done with our path
-    if length(highProbTargets) > 1 && size(oldPath,1) > 2
+    if length(unseenOutputOrder) > 1 && size(oldPath,1) > 2
         pathUpdated = true;
         display = 0;
         usegridconstraints = true;
         billboardLocations = objLocs(unseenOutputOrder,1:2);
         
-        startingLocation = getStartingLocation(classifier_outputs(end,1),objLocs,oldPath); 
+        [startingLocation, stitchPathsInd] = getStartingLocation(classifier_outputs(end,1),objLocs,oldPath); 
     
         pathLocations = [startingLocation; convertBillboardtoPathLocation(billboardLocations)];
    
@@ -93,11 +91,25 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
         end
         fullPath = [fullPath; tspOutput(i+1,:)];
         
+        % Stitch together the old path and the new path
+        fullPath = vertcat(oldPath(1:stitchPathsInd-1,1:2), fullPath);
+        
         % Interpolate waypoints in between the turns
         fullPath = interpWaypoints(fullPath);
+        
+        % Check for 180 degree turns, correct them
+
+        
+        
+        
+            
+        
         dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
-        disp('NEW CARPATH DEFINED')
+        disp('New carpath defined.')
+        disp('Next three points: ')
+        disp(fullPath(1:3,:))
     end
+    disp(' ')
 end
 
 

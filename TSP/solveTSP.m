@@ -102,7 +102,9 @@ end
         %% -------- fliping all loops found worth fliping --------------------
         prevOrd = order;        
         for n=1:numel( reqFlips )
+            if reqFlips(n) ~= 1
             order( reqFlips(n) : reqFlips(n)+flip-1 ) = order( reqFlips(n) +flip-1: -1 :reqFlips(n) );
+            end
         end
         
         %% -------  counting how many iterations there was no improvement

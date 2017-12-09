@@ -6,11 +6,12 @@ clc; clear all; close all;
 % Specify which systems are connected
 UNITY = true;
 PYTHON = true;
-EEG_connected = false;
-EYE_connected = false;
-SIMULATE_DATA = true;
+EEG_connected = true;
+EYE_connected = true;
+SIMULATE_DATA = false;
 PCA_ICA = false;
-CLOSED_LOOP = true;
+UPDATE_INTEREST_SPHERES = true;
+UPDATE_CAR_PATH = true;
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
 SAVE_RAW_DATA = false;
@@ -119,7 +120,7 @@ if UNITY||EEG_connected||EYE_connected||PYTHON
 end
 
 % Create outlet from matlab to unity
-if CLOSED_LOOP
+if UPDATE_INTEREST_SPHERES || UPDATE_CAR_PATH
     info = lsl_streaminfo(lib, 'Matlab->Unity', 'Markers', 3, 0,'cf_float32','sdfwerr32432');
     outlet_matlabToUnity = lsl_outlet(info);
     disp('Opened outlet: Matlab -> Unity');
@@ -192,7 +193,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     end
     
     
-    if (PYTHON && CLOSED_LOOP)
+    if PYTHON
         % Create the cue for python to start a new block
         %    1 - (66,385) is the start cue. 1 to start a block, -1 to end
         %    it, and 0 throughout. 
@@ -622,10 +623,13 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 end
                 disp(['captured epoch: ' num2str(counter_epoch)])
                 counter_epoch = counter_epoch + 1;
+                if ~UPDATE_CAR_PATH && ~UPDATE_INTEREST_SPHERES
+                    disp(' ')
+                end
             end
        end
     %% Dummy classifier for matlab and unity mode (for debugging unity)
-       if UNITY && ~PYTHON && ~EEG_connected && ~EYE_connected && CLOSED_LOOP && (counter_unity ~= 1)
+       if UNITY && ~PYTHON && ~EEG_connected && ~EYE_connected && UPDATE_INTEREST_SPHERES && (counter_unity ~= 1)
            % Once per billboard:
            if (unity_data(7,counter_unity)==0 && unity_data(7,counter_unity-1)~=0 && ~any(Billboard.id == unity_data(7,counter_unity-1))) %if a billboard has gone out of view
                 billboard_num = unity_data(7,counter_unity-1);
@@ -656,7 +660,9 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 else
                    oldPath = dlmread('../../NEDE_Game/NedeConfig/newCarPath.txt',',');
                 end
-                pathUpdated = runTag(classification,oldPath);
+                if counter_epoch == 12
+                    pathUpdated = runTag(classification,oldPath);
+            
                 if pathUpdated == true
                     initialPath = false;
                     % Send a cue to unity to read in the TAG and TSP solutions
@@ -667,6 +673,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     % without updating the path
                     outlet_matlabToUnity.push_sample([-1,0,0]);
 
+                end
                 end
             end
         end
@@ -830,7 +837,7 @@ if PYTHON
 end
 
 % Close outlet to unity
-if CLOSED_LOOP
+if UPDATE_CAR_PATH || UPDATE_INTEREST_SPHERES
     pause(1.5); % Give python time to pick up the exit cue before closing the stream
     outlet_matlabToUnity.delete()
     disp('Matlab->Unity outlet closed')

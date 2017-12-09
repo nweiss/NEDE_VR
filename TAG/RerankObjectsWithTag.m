@@ -44,27 +44,27 @@ if nSensitivity < 1
     fracSensitivity = nSensitivity;
     nSensitivity = round(numel(iTargets)*fracSensitivity);    
 end
-fprintf('--- TAG: Self-tuning will be applied %d times.\n',nSensitivity);
+%fprintf('--- TAG: Self-tuning will be applied %d times.\n',nSensitivity);
 
 %%% load image list & TAG graph
 graphtype = 'tiny'; % tiny: only include images in Unity. lite: only include images from 4 categories.
 switch graphtype
     case 'tiny'
-        fprintf('Loading FileList_tiny and graph_3_tiny...\n');
+        %fprintf('Loading FileList_tiny and graph_3_tiny...\n');
         load FileList_tiny
         load graph_3_tiny
     case 'lite'
-        fprintf('Loading FileList_lite and graph_3_lite...\n');
+        %fprintf('Loading FileList_lite and graph_3_lite...\n');
         load FileList_lite
         load graph_3_lite
     otherwise
         graphnum = 3;
-        fprintf('Loading FileList and graph_%d...\n', graphnum);
+        %fprintf('Loading FileList and graph_%d...\n', graphnum);
         load FileList    
         load(['graph_' num2str(graphnum) '.mat'])
 end
 %% Get indices in TAG graph
-disp('Getting TAG indices of objects...')
+%disp('Getting TAG indices of objects...')
 objectInd = zeros(1,numel(objectList));
 targetInd = [];
 for i=1:numel(objectList)
@@ -78,7 +78,7 @@ for i=1:numel(objectList)
 end
 
 %% Run TAG
-disp('Re-ranking all images with TAG...')
+%disp('Re-ranking all images with TAG...')
 %%% Set options
 options.rmvnum=nSensitivity;     %%% Self tuning for 10 iterations;
 %%% it takes a while to run reranking
@@ -88,7 +88,7 @@ isSST_tagout = zeros(size(new_score));
 isSST_tagout(iSelfTunedTargets) = 1;
 
 %% Re-rank input images accordingly
-disp('Re-ranking objects...')
+%disp('Re-ranking objects...')
 [re_rank_score, re_rank_ind]=sort(new_score,'descend');
 iReranked = re_rank_ind(ismember(re_rank_ind,objectInd));
 newscore = re_rank_score(ismember(re_rank_ind,objectInd));
@@ -104,4 +104,4 @@ for i=1:numel(iReranked)
     isSelfTunedTarget = [isSelfTunedTarget repmat(isSST_newscore(i),1,sum(objectInd==iReranked(i)))];
 end
 
-disp('Success!')
+%disp('Success!')

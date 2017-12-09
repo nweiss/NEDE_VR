@@ -1,4 +1,4 @@
-function startingLocation = getStartingLocation(billboardID,objLocs,oldPath)
+function [startingLocation, pathIndex] = getStartingLocation(billboardID,objLocs,oldPath)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %billboardID: billboard ID from Unity that you most recently passed. Int from 0-total number of
     %billboards
@@ -9,6 +9,7 @@ function startingLocation = getStartingLocation(billboardID,objLocs,oldPath)
     %don't yet understand
     
     % Returns: statingLocation: First point on the new path
+    %  - pathIndex: the index of the startingLocation on the oldPath
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % look up billboard location from billboard ID
@@ -25,7 +26,7 @@ function startingLocation = getStartingLocation(billboardID,objLocs,oldPath)
     billboardsAhead = 0;
     while billboardsAhead ~= 2
        pathIndex = pathIndex + 1;
-       if (mod(oldPath(pathIndex,2),20)==0) && (oldPath(pathIndex,2)~=160) && (oldPath(pathIndex,2)~=0)
+       if (mod(oldPath(pathIndex,2),20)==0) & (oldPath(pathIndex,2)~=160) && (oldPath(pathIndex,2)~=0)
            billboardsAhead = billboardsAhead + 1;
        end
     end

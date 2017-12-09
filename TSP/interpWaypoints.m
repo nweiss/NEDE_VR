@@ -10,6 +10,7 @@ function newCarPath = interpWaypoints(oldCarPath)
     waypointXPos = 0:15:105;
     waypointYPos = 20:20:140;
     newCarPath = oldCarPath;
+    pointsToInsert = [];
 
     % Iterate through every waypoint in the oldCarPath
     for i = 1:nWayPoints-1
@@ -64,10 +65,11 @@ function newCarPath = interpWaypoints(oldCarPath)
         end
 
         % Insert new interpolated points into the newCarPath
-        newPathInd = find(newCarPath(:,1)==oldCarPath(i,1) & newCarPath(:,2)==oldCarPath(i,2));
-        prevPoints = newCarPath(1:newPathInd,:);
-        nextPoints = newCarPath(newPathInd+1:end,:);
-        newCarPath = [prevPoints; pointsToInsert; nextPoints];
-
+        if ~isempty(pointsToInsert)
+            newPathInd = find(newCarPath(:,1)==oldCarPath(i,1) & newCarPath(:,2)==oldCarPath(i,2));
+            prevPoints = newCarPath(1:newPathInd,:);
+            nextPoints = newCarPath(newPathInd+1:end,:);
+            newCarPath = [prevPoints; pointsToInsert; nextPoints];
+        end
     end
 end
