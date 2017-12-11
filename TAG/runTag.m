@@ -1,5 +1,9 @@
-function [pathUpdated] = runTag(classifier_outputs,oldPath)
+function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,initialPath)
     
+    % Inputs:
+    %   - initialPath: a flag indicating if the car is still following the
+    %     initial (grid) path
+
     % pathUpdated is a boolean indicating whether or not there was
     % confidence in enough billboards to update the car path
 
@@ -15,7 +19,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
 %     disp('Opened inlet: Classifier -> Matlab');
 
     % need to time this properly
-    objLocs = dlmread('../../NEDE_Game/objectLocs.txt',',');
+    objLocs = dlmread('../NEDE_Game/objectLocs.txt',',');
 
     % we should change this order and probably read these in from a file
     image_types = {'car_side', 'grand_piano', 'laptop','schooner'};
@@ -53,9 +57,9 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
     % make sure you don't go to the same billboard
     for i=1:length(highProbTargets)
        if ismember(highProbTargets(i),iTargets)
-           orderedScores(i) = confidence_scores(highProbTargets(i)+1);
+           %orderedScores(highProbTargets(i)) = confidence_scores(highProbTargets(i)+1);
        elseif ismember(highProbTargets(i), iDistractors)
-           orderedScores(i) = confidence_scores(highProbTargets(i)+1);
+           %orderedScores(i) = confidence_scores(highProbTargets(i)+1);
        else 
            unseenOutputOrder(counter) = highProbTargets(i);
            counter = counter + 1;
@@ -63,51 +67,85 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath)
     end
     
     % eliminate any scientific notation (ie 3.41e-5)
-    dlmwrite('../../NEDE_Game/interestScores.txt',orderedScores','newline', 'pc', 'precision', '%1.5f');
+    dlmwrite('../NEDE_Game/interestScores.txt',orderedScores','newline', 'pc', 'precision', '%1.5f');
     disp('Interest scores updated.')
 
     pathUpdated = false;
     % Only run the TSP when there are several interesting objects in the
     % environment and were not almost done with our path
-    if length(unseenOutputOrder) > 1 && size(oldPath,1) > 2
-        pathUpdated = true;
-        display = 0;
-        usegridconstraints = true;
-        billboardLocations = objLocs(unseenOutputOrder,1:2);
-        
-        [startingLocation, stitchPathsInd] = getStartingLocation(classifier_outputs(end,1),objLocs,oldPath); 
-    
-        pathLocations = [startingLocation; convertBillboardtoPathLocation(billboardLocations)];
-   
-    
-        tspOutput = solveTSP(pathLocations, display, usegridconstraints);
-        fullPath = [];
-        for i = 1:length(tspOutput)-1
-            fullPath = [fullPath; tspOutput(i,:)];
-            if tspOutput(i,1) ~= tspOutput(i+1,1)
-                turningY = tspOutput(i,2) + (30 - mod(tspOutput(i,2),30));
-                fullPath = [fullPath; [tspOutput(i,1) turningY]; [tspOutput(i+1,1) turningY]];
-            end
-        end
-        fullPath = [fullPath; tspOutput(i+1,:)];
-        
-        % Stitch together the old path and the new path
-        fullPath = vertcat(oldPath(1:stitchPathsInd-1,1:2), fullPath);
-        
-        % Interpolate waypoints in between the turns
-        fullPath = interpWaypoints(fullPath);
-        
-        % Check for 180 degree turns, correct them
+    if initialPath % Only run TSP once per block
+        if length(unseenOutputOrder) > 1 && size(oldPath,1) > 2 % this doesn't do what the comment says it does
+            pathUpdated = true;
+            display = 0;
+            usegridconstraints = true;
+            billboardLocations = objLocs(unseenOutputOrder,1:2);
 
-        
-        
-        
+            [startingLocation, stitchPathsInd] = getStartingLocation(classifier_outputs(end,1),objLocs,oldPath,numBillboardsSeen); 
+
+            pathLocations = [startingLocation; convertBillboardtoPathLocation(billboardLocations)];
+
+            tspOutput = solveTSP(pathLocations, display, usegridconstraints);
+
+            % If the startingLoc is a position of interest, it will appear
+            % twice. If that is true, remove the repeat.
+            if tspOutput(1,:) == tspOutput(2,:)
+                tspOutput(2,:) = [];
+            end
+
+            disp('tspOutput: ')
+            disp(tspOutput)
+            % 
             
-        
-        dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
-        disp('New carpath defined.')
-        disp('Next three points: ')
-        disp(fullPath(1:3,:))
+            % Insert waypoints at turn corners
+            fullPath = [];
+            for i = 1:length(tspOutput)-1
+                fullPath = [fullPath; tspOutput(i,:)];
+                if tspOutput(i,1) ~= tspOutput(i+1,1)
+                    if fullPath(end) - fullPath(end-1) > 0 %going up
+                        turningY = tspOutput(i,2) + 10;
+                    elseif fullPath(end) - fullPath(end-1) < 0 %going down
+                        turningY = tspOutput(i,2) - 10;
+                    else
+                        error('car not going up or down');
+                    end
+                    fullPath = [fullPath; [tspOutput(i,1) turningY]; [tspOutput(i+1,1) turningY]];
+                end
+            end
+            fullPath = [fullPath; tspOutput(i+1,:)];
+            tmpFullPath1 = fullPath; % for debugging
+            disp('Fullpath after turns inserted: ')
+            disp(fullPath)
+
+            % Stitch together the old path and the new path
+            fullPath = vertcat(oldPath(1:stitchPathsInd-1,1:2), fullPath);
+            stitchPathPoint = oldPath(stitchPathsInd,1:2);
+            tmpFullPath2 = fullPath; % for debugging
+            disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
+            disp('Fullpath after stitched with old path: ')
+            disp(fullPath)
+            
+            % Interpolate waypoints in between the turns
+            fullPath = interpWaypoints(fullPath);
+            tmpFullPath3 = fullPath; % for debugging
+            disp('Fullpath after interpolation: ')
+            disp(fullPath)
+
+            % Check for 180 degree turns, correct them
+            present180s = true;
+            while present180s
+                [fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd); 
+            end
+            tmpFullPath4 = fullPath; % for debugging
+            disp('Fullpath after resolve180s: ')
+            disp(fullPath)
+            
+            % Remove oldpath
+            % fullPath = fullPath(stitchPathsInd:end,:);    
+
+            dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
+            disp('New carpath defined')
+            disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
+        end
     end
     disp(' ')
 end

@@ -1,10 +1,11 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Logging\PlaceAll.js">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Movement\RobotWalk.js">
     <Files>
-      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="680" Column="1" />
-      <File FileName="Assets\Scripts\Movement\RobotWalk.js" Line="107" Column="75" />
+      <File FileName="Assets\Scripts\Logging\PlaceAll.js" Line="33" Column="18" />
+      <File FileName="Assets\Scripts\Movement\RobotWalk.js" Line="176" Column="34" />
       <File FileName="Assets\Standard Assets\LSL_BCI_Input.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\ExperimentSetup\LevelLoader.js" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

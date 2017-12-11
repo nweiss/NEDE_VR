@@ -1,9 +1,11 @@
-%function newpath = resolve180s(oldPath, tspOutput)
-clear
+function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd)
 
-load('fullPath.mat');
-load('tspOutput.mat');
-
+    % only add stitch path point if it isn't already on tspOutput
+    if ~any(stitchPathPoint(1) == tspOutput(:,1) & stitchPathPoint(2) == tspOutput(:,2))
+        tspOutput = [stitchPathPoint; tspOutput];
+    end
+    present180s = false;
+    newPath = fullPath;
     % Check for 180 degree turns, correct them
     for i = 1:length(fullPath)-2
         goingUpCurr = fullPath(i+1,2) - fullPath(i,2) > 0;
@@ -13,6 +15,7 @@ load('tspOutput.mat');
 
         % if there is a 180 degree turn
         if ~(goingHorzCurr || goingHorzNext) && (goingUpCurr ~= goingUpNext)
+            present180s = true;
             % Find the next billboard location
             IndOfCurrLocOnTSPPath = find(all(tspOutput == fullPath(i+1,:),2));
             currBillboardPathLoc = tspOutput(IndOfCurrLocOnTSPPath,:);
@@ -48,7 +51,6 @@ load('tspOutput.mat');
             end
             % same column as the current billboard (true 180 needed)
             if currBillboardPathLoc(1) == nextBillboardPathLoc(1)
-                tmp = 2;
                 % If the car is going up
                 if goingUpCurr == true
                     newPathAddition(1,1:2) = [fullPath(i+1,1) fullPath(i+1,2)+10]; % don't turn around
@@ -69,8 +71,10 @@ load('tspOutput.mat');
                 end
             end
             newPath = [fullPath(1:IndOfCurrBillboardOnFullPath-1,:); newCarPath; fullPath(IndOfNextBillboardOnFullPath+1:end,:)];
-            
+            newPath = interpWaypoints(newPath);
+            break
         end
+        
     end
     
 %end

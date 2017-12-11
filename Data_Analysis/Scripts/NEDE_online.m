@@ -311,6 +311,8 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         stop_time_sim = max(unity.time_stamps) + 3.2; % simulation end time. Allow extra 3 sec to allow pupil data to come in.
     end
     
+    pathUpdated = false; % Flag to indicate when the car path is updated by TSP
+    
     %% Main Loop - Within a block, continuously analyze incoming data 
     % The counters run in a non-traditional way. counter_matlab counts the
     % number of times through the large inner while loop. In each run through
@@ -660,8 +662,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 else
                    oldPath = dlmread('../../NEDE_Game/NedeConfig/newCarPath.txt',',');
                 end
-                if counter_epoch == 12
-                    pathUpdated = runTag(classification,oldPath);
+                pathUpdated = runTag(classification,oldPath,counter_billboard-1,initialPath);
             
                 if pathUpdated == true
                     initialPath = false;
@@ -673,7 +674,6 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                     % without updating the path
                     outlet_matlabToUnity.push_sample([-1,0,0]);
 
-                end
                 end
             end
         end

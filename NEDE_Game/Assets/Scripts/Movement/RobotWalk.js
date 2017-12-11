@@ -98,6 +98,11 @@ function ParseRouteFile(pointsFilename: String) {
 		isObjectPoint = arrayIsObjPt.ToBuiltin(float);
 	}
 	yield;
+
+	// Reset ind every time we update the car path
+	// Neil
+	//iPoint = 0;
+	Debug.Log("New Carpath Defined");
 }
 
 
@@ -168,6 +173,7 @@ function Update () {
 		if (nextMove==GOSTRAIGHT) {
 			if (Vector3.Distance(transform.position,moveTarget) < (Time.deltaTime * moveSpeed)) { // if we're almost on top of the target
 				iPoint++;
+				Debug.Log("iPoint: " + iPoint);
 
 				if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
 					Debug.Log("Passed final obj at time: " + Time.time);
@@ -175,11 +181,6 @@ function Update () {
 				}
 				// update moves
 				currentMove = nextMove;
-				Debug.Log('current set of 3 points: ');
-				Debug.Log(points[iPoint-1][0] + ' ' + points[iPoint-1][1]);
-				Debug.Log(points[iPoint][0] + ' ' + points[iPoint][1]);
-				Debug.Log(points[iPoint+1][0] + ' ' + points[iPoint+1][1]);
-
 				nextMove = FindNextMove(points[iPoint-1], points[iPoint], points[iPoint+1]);
 				// get new target				
 				moveTarget = Vector3(points[iPoint].x, transform.position.y, points[iPoint].y);
