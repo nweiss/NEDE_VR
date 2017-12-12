@@ -70,11 +70,9 @@ function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoi
                     newCarPath = [newPathAddition; nextBillboardPathLoc];
                 end
             end
-            newPath = [fullPath(1:IndOfCurrBillboardOnFullPath-1,:); newCarPath; fullPath(IndOfNextBillboardOnFullPath+1:end,:)];
-            newPath = interpWaypoints(newPath);
-            break
-        end
-        
-    end
+        newPath = [fullPath(1:IndOfCurrBillboardOnFullPath-1,:); newCarPath; fullPath(IndOfNextBillboardOnFullPath+1:end,:)];
+        newPath = interpWaypoints(newPath);
+        break
+    end 
+end
     
-%end

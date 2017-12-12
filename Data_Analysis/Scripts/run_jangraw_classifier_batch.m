@@ -9,14 +9,21 @@ close all; clc; clear all;
 DATA_VERSION_NO = '6'; % version of the stored data
 nFolds = 10;
 SAVE_ON = false;
+SUBJECTS = [13];
 
 %% Paths
-DIR = fullfile('..','..','NEDE_Online');
-addpath(genpath(DIR));
+function_path = fullfile('..','Functions');
+addpath(genpath(function_path));
+
+hdca_path = fullfile('..','HDCA');
+addpath(genpath(hdca_path));
 
 %% Load Data
 LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['training_v',DATA_VERSION_NO],'training_data.mat');
 load(LOAD_PATH);
+
+%% Initialize Variables
+nTrials = zeros(length(stimulus_type),1);
 
 %% Misc
 % For data version 4: Update the format of the data so each subject has its own cell array
@@ -25,123 +32,103 @@ if strcmp(DATA_VERSION_NO, '4')
 end
     
 %% Main
-nSubjects = numel(subject);
-subjects = 1:nSubjects;
+nSubjects = length(SUBJECTS);
+shuffleMap = cell(nSubjects,1);
+for subject = SUBJECTS
+    %Use the absolute value of head rotation
+    head_rotation{subject} = abs(head_rotation{subject});
 
-for i = subjects
-%Use the absolute value of head rotation
-head_rotation = abs(head_rotation);
+    % Update the stimulus type so that (0=distractor, 1=target)
+    stimulus_type{subject} = convertLabels(stimulus_type{subject});
 
-% Update the stimulus type so that (0=distractor,1=target)
-stimulus_type = convertLabels(stimulus_type);
-
-% Shuffle the trials prior to partitioning them into training/testing sets
-% shuffleMap = cell(max(SUBJECTS),1);
-% for i = 1:8
-%     rng(i);
-%     shuffleMap{i} = randperm(nTrials(i));
-%     
-%     billboard_cat{i}=billboard_cat{i}(shuffleMap{i});
-%     block{i}=block{i}(shuffleMap{i});
-%     dwell_times{i}=dwell_times{i}(shuffleMap{i});
-%     EEG{i}=EEG{i}(:,:,shuffleMap{i});
-%     head_rotation{i}=head_rotation{i}(shuffleMap{i},:);
-%     pupil{i}=pupil{i}(shuffleMap{i},:);
-%     stimulus_type{i}=stimulus_type{i}(shuffleMap{i});
-%     target_category{i}=target_category{i}(shuffleMap{i});
-% end
-
-% Keep trials from only one day of experiment
-% blocksToKeep = (28:42);
-% trialsToDel = ~ismember(block{8},blocksToKeep);
-% billboard_cat{i}(trialsToDel) = [];
-% block{i}(trialsToDel)=[];
-% dwell_times{i}(trialsToDel)=[];
-% EEG{i}(:,:,trialsToDel)=[];
-% head_rotation{i}(trialsToDel,:)=[];
-% pupil{i}(trialsToDel,:)=[];
-% stimulus_type{i}(trialsToDel)=[];
-% target_category{i}(trialsToDel)=[];
+    %Shuffle the trials prior to partitioning them into training/testing sets
+    nTrials(subject) = length(stimulus_type{subject});
+    rng(subject);
+    shuffleMap{subject} = randperm(nTrials(subject));
+        
+    billboard_cat{subject} = billboard_cat{subject}(shuffleMap{subject});
+    block{subject} = block{subject}(shuffleMap{subject});
+    dwell_times{subject} = dwell_times{subject}(shuffleMap{subject});
+    EEG{subject} = EEG{subject}(:,:,shuffleMap{subject});
+    head_rotation{subject} = head_rotation{subject}(shuffleMap{subject},:);
+    pupil{subject} = pupil{subject}(shuffleMap{subject},:);
+    stimulus_type{subject} = stimulus_type{subject}(shuffleMap{subject});
+    target_category{subject} = target_category{subject}(shuffleMap{subject});
+    
+end
 
 %% HDCA classifier
 cvmode = [num2str(nFolds),'fold'];
 level2data = [];
 fwdModelData = [];
 
-dwell_level1 = cell(max(SUBJECTS),1);
-EEG_level1 = cell(max(SUBJECTS),1);
-pupil_level1 = cell(max(SUBJECTS),1);
-headrotation_level1 = cell(max(SUBJECTS),1);
+dwell_level1 = cell(nSubjects,1);
+EEG_level1 = cell(nSubjects,1);
+pupil_level1 = cell(nSubjects,1);
+headrotation_level1 = cell(nSubjects,1);
 
-v_dwell = cell(max(SUBJECTS),1);
-v_EEG = cell(max(SUBJECTS),1);
-v_pupil = cell(max(SUBJECTS),1);
-v_headrotation = cell(max(SUBJECTS),1);
-v_comb = cell(max(SUBJECTS),1);
+v_dwell = cell(nSubjects,1);
+v_EEG = cell(nSubjects,1);
+v_pupil = cell(nSubjects,1);
+v_headrotation = cell(nSubjects,1);
+v_comb = cell(nSubjects,1);
 
-Az.dwell = nan(max(SUBJECTS),1);
-Az.dwell_v2 = nan(max(SUBJECTS),1);
-Az.EEG = nan(max(SUBJECTS),1);
-Az.pupil = nan(max(SUBJECTS),1);
-Az.headrotation = nan(max(SUBJECTS),1);
-Az.comb = nan(max(SUBJECTS),1);
+Az.dwell = nan(nSubjects,1);
+Az.dwell_v2 = nan(nSubjects,1);
+Az.EEG = nan(nSubjects,1);
+Az.pupil = nan(nSubjects,1);
+Az.headrotation = nan(nSubjects,1);
+Az.comb = nan(nSubjects,1);
 
-ROC_x_dt1 = cell(max(SUBJECTS),1);
-ROC_y_dt1 = cell(max(SUBJECTS),1);
-ROC_x_pup = cell(max(SUBJECTS),1);
-ROC_y_pup = cell(max(SUBJECTS),1);
-ROC_x_hr = cell(max(SUBJECTS),1);
-ROC_y_hr = cell(max(SUBJECTS),1);
-ROC_x_eeg = cell(max(SUBJECTS),1);
-ROC_y_eeg = cell(max(SUBJECTS),1);
-ROC_x_comb = cell(max(SUBJECTS),1);
-ROC_y_comb = cell(max(SUBJECTS),1);
+ROC_x_dt1 = cell(nSubjects,1);
+ROC_y_dt1 = cell(nSubjects,1);
+ROC_x_pup = cell(nSubjects,1);
+ROC_y_pup = cell(nSubjects,1);
+ROC_x_hr = cell(nSubjects,1);
+ROC_y_hr = cell(nSubjects,1);
+ROC_x_eeg = cell(nSubjects,1);
+ROC_y_eeg = cell(nSubjects,1);
+ROC_x_comb = cell(nSubjects,1);
+ROC_y_comb = cell(nSubjects,1);
 
-level1_comb = cell(max(SUBJECTS),1);
-y_comb = cell(max(SUBJECTS),1);
+level1_comb = cell(nSubjects,1);
+y_comb = cell(nSubjects,1);
 
-for i = SUBJECTS
-    nTrials = length(dwell_times{i});
+for subject = SUBJECTS
+    nTrials = length(dwell_times{subject});
     cv = setCrossValidationStruct(cvmode,nTrials);
     
     % Dwell Time
     trainingwindowlength = 1;
     trainingwindowoffset = [1];
-    dwell_times{i} = permute(dwell_times{i}, [3,1,2]);
-    [y_dt,~,~,~,dwell_level1{i},ROC_x_dt1{i},ROC_y_dt1{i},~,Az.dwell(i)] = RunHybridHdcaClassifier2(dwell_times{i},stimulus_type{i},trainingwindowlength,trainingwindowoffset,cvmode);
-    [X_dt2,Y_dt2,T_dt2,Az.dwell_v2(i)] = perfcurve(squeeze(stimulus_type{i}), squeeze(squeeze(dwell_times{i})), 0);
+    dwell_times{subject} = permute(dwell_times{subject}, [3,1,2]);
+    [y_dt,~,~,~,dwell_level1{subject},ROC_x_dt1{subject},ROC_y_dt1{subject},~,Az.dwell(subject)] = RunHybridHdcaClassifier2(dwell_times{subject},stimulus_type{subject},trainingwindowlength,trainingwindowoffset,cvmode);
+    [X_dt2,Y_dt2,T_dt2,Az.dwell_v2(subject)] = perfcurve(squeeze(stimulus_type{subject}), squeeze(squeeze(dwell_times{subject})), 0);
     
     % Pupil
     trainingwindowlength = .5*60; % half a second at 60 herz
     trainingwindowoffset = (1*60:trainingwindowlength:4*60-trainingwindowlength);
-    pupil{i} = permute(pupil{i}, [3,2,1]);
-    [y_pup,w,v_pupil{i},fwdModel,pupil_level1{i},ROC_x_pup{i},ROC_y_pup{i},T_pup,Az.pupil(i)] = RunHybridHdcaClassifier2(pupil{i},stimulus_type{i},trainingwindowlength,trainingwindowoffset,cvmode);
+    pupil{subject} = permute(pupil{subject}, [3,2,1]);
+    [y_pup,w,v_pupil{subject},fwdModel,pupil_level1{subject},ROC_x_pup{subject},ROC_y_pup{subject},T_pup,Az.pupil(subject)] = RunHybridHdcaClassifier2(pupil{subject},stimulus_type{subject},trainingwindowlength,trainingwindowoffset,cvmode);
     
     % Head Rotation
     trainingwindowlength = floor(.25*75); % quarter second at 75 herz
     trainingwindowoffset = (floor(.5*75):trainingwindowlength:2*75-trainingwindowlength);
-    head_rotation{i} = permute(head_rotation{i}, [3,2,1]);
-    [y_hr,w,v_headrotation{i},fwdModel,headrotation_level1{i},ROC_x_hr{i},ROC_y_hr{i},T_hr,Az.headrotation(i)] = RunHybridHdcaClassifier2(head_rotation{i},stimulus_type{i},trainingwindowlength,trainingwindowoffset,cvmode);
+    head_rotation{subject} = permute(head_rotation{subject}, [3,2,1]);
+    [y_hr,w,v_headrotation{subject},fwdModel,headrotation_level1{subject},ROC_x_hr{subject},ROC_y_hr{subject},T_hr,Az.headrotation(subject)] = RunHybridHdcaClassifier2(head_rotation{subject},stimulus_type{subject},trainingwindowlength,trainingwindowoffset,cvmode);
     
     % EEG
     trainingwindowlength = 25;
     trainingwindowoffset = (153:25:385-25);
-    [y_eeg,w,v_EEG{i},fwdModel,EEG_level1{i},ROC_x_eeg{i},ROC_y_eeg{i},T_eeg,Az.EEG(i)] = RunHybridHdcaClassifier2(EEG{i},stimulus_type{i},trainingwindowlength,trainingwindowoffset,cvmode);
+    [y_eeg,w,v_EEG{subject},fwdModel,EEG_level1{subject},ROC_x_eeg{subject},ROC_y_eeg{subject},T_eeg,Az.EEG(subject)] = RunHybridHdcaClassifier2(EEG{subject},stimulus_type{subject},trainingwindowlength,trainingwindowoffset,cvmode);
     
     % Combined Model
     trainingwindowlength = 1;
     trainingwindowoffset = 1;
-    level1_comb{i} = cat(2, EEG_level1{i}, pupil_level1{i}, headrotation_level1{i});
-    [y_comb{i},w,v_comb{i},fwdModel,EEG_level1{i},ROC_x_comb{i},ROC_y_comb{i},T_comb,Az.comb(i)] = RunHybridHdcaClassifier2(dwell_times{i},stimulus_type{i},trainingwindowlength,trainingwindowoffset,cvmode, level1_comb{i});
+    level1_comb{subject} = cat(2, EEG_level1{subject}, pupil_level1{subject}, headrotation_level1{subject});
+    [y_comb{subject},w,v_comb{subject},fwdModel,EEG_level1{subject},ROC_x_comb{subject},ROC_y_comb{subject},T_comb,Az.comb(subject)] = RunHybridHdcaClassifier2(dwell_times{subject},stimulus_type{subject},trainingwindowlength,trainingwindowoffset,cvmode, level1_comb{subject});
 
 end
-
-Az.dwell(3) = [];
-Az.dwell_v2(3) = [];
-Az.EEG(3) = [];
-Az.pupil(3) = [];
-Az.headrotation(3) = [];
-Az.comb(3) = [];
 
 figure
 plot((1:max(SUBJECTS)-1),Az.dwell,'-*')
