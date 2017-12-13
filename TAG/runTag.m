@@ -63,26 +63,44 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     end
     % If the car is going up and not near a turn
     if (carGoingUp && lastTwoBillboardLoc(2,2) < 120)
-        nextTwoBillboardY = [lastTwoBillboardLoc(2,2)+20; lastTwoBillboardLoc(2,2)+40];
         nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);]
+        nextTwoBillboardY = [lastTwoBillboardLoc(2,2)+20; lastTwoBillboardLoc(2,2)+40];
     end
     % If the car is going down and not near a turn
     if (~carGoingUp && lastTwoBillboardLoc(2,2) > 40)
+        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);];
         nextTwoBillboardY = [lastTwoBillboardLoc(2,2)-20; lastTwoBillboardLoc(2,2)-40];
-        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);]
     end
     % If the car is going up and just passed y=120
-    
+    if (carGoingUp && lastTwoBillboardLoc(2,2) == 120)
+        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1)+15];
+        nextTwoBillboardY = [140; 140];
+    end
     % If the car is going up and just passed y=140
-    
+    if (carGoingUp && lastTwoBillboardLoc(2,2) == 140)
+        nextTwoBillboardX = [lastTwoBillboardLoc(2,1)+15; lastTwoBillboardLoc(2,1)+15];
+        nextTwoBillboardY = [140; 120];
+    end
     % If the car is going down and just passed y=40
-    
+    if (~carGoingUp && lastTwoBillboardLoc(2,2) == 40)
+        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1)+15];
+        nextTwoBillboardY = [20; 20];
+    end    
     % If the car is going down and just passed y=20
+    if (~carGoingUp && lastTwoBillboardLoc(2,2) == 20)
+        nextTwoBillboardX = [lastTwoBillboardLoc(2,1)+15; lastTwoBillboardLoc(2,1)+15];
+        nextTwoBillboardY = [20; 40];
+    end 
+    
     nextTwoBillboardLoc = [nextTwoBillboardX, nextTwoBillboardY];
     oneAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(1,1) && billboardPathLocs(:,2)==nextTwoBillboardLoc(1,2),3);
     twoAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(2,1) && billboardPathLocs(:,2)==nextTwoBillboardLoc(2,2),3);
     nextTwoBillboardInd = [oneAheadBillboardInd; twoAheadBillboardInd];
+    disp('seenBillboards:')
+    disp(seenBillboards)
     seenBillboards = [seenBillboards; nextTwoBillboardInd];
+    disp('seenBillboards plus the next two: ')
+    disp(seenBillboards)
     
     % Run TAG to use CV to identify target billboards that haven't yet been
     % visited and to weed out false positives from the billboards that have
