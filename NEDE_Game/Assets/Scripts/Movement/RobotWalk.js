@@ -39,7 +39,7 @@ public var points: Vector2[]; //array of points to hit
 var isObjectPoint: float[];
 public var iPoint = 0;
 var iEndPoint = 20;
-var nObjToSee = 20;
+var nObjToSee = 40;
 var nObjects = 0;
 var distanceTraveled = 0.0; // used to gauge distance between leader and follower
 // private variables
@@ -173,7 +173,7 @@ function Update () {
 		if (nextMove==GOSTRAIGHT) {
 			if (Vector3.Distance(transform.position,moveTarget) < (Time.deltaTime * moveSpeed)) { // if we're almost on top of the target
 				iPoint++;
-				Debug.Log("iPoint: " + iPoint);
+				//Debug.Log("iPoint: " + iPoint);
 
 				if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
 					Debug.Log("Passed final obj at time: " + Time.time);

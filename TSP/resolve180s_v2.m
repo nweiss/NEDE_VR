@@ -74,4 +74,5 @@ function [newPath, present180s] = resolve180s_v2(oldPath, tspOutput)
         break
     end
     i = i+1;
+    end
 end

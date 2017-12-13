@@ -16,10 +16,10 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     
     % Thresh is the threshold for the TAG output [0-1] that we use to
     % define a high probability target for the TSP
-    thresh = 0.1;
+    thresh = 0.05;
     
     %% TAG
-    objLocs = dlmread('../NEDE_Game/objectLocs.txt',',');
+    objLocs = dlmread('../../NEDE_Game/objectLocs.txt',',');
 
     graph_1 = load('graph_3_tiny.mat');
     result_eye = {};
@@ -44,7 +44,45 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     iTargets = classifier_outputs(target_indices,1);
     iDistractors = classifier_outputs(distractor_indices,2) == 0;
     confidence_scores = classifier_outputs(:,3);
+
+    % Find the billboards that have been seen already (plus the next two
+    % that will be seen) so that the TSP doesn't circle back to them.
     seenBillboards = classifier_outputs(:,1);
+    billboardPathLocs = convertBillboardtoPathLocation(objLocs(:,1:2));
+    billboardPathLocs = [billboardPathLocs,objLocs(:,5)];
+    lastTwoBillboardInd = seenBillboards(end-1:end);
+    lastTwoBillboardLoc = billboardPathLocs(lastTwoBillboardInd+1,1:2);
+    
+    carGoingHor = false;
+    if lastTwoBillboardLoc(2)-lastTwoBillboardLoc(1) > 0
+        carGoingUp = true;
+    elseif lastTwoBillboardLoc(2)-lastTwoBillboardLoc(1) < 0
+        carGoingUp = false;
+    elseif lastTwoBillboardLoc(2)-lastTwoBillboardLoc(1) == 0
+        carGoingHor = true;
+    end
+    % If the car is going up and not near a turn
+    if (carGoingUp && lastTwoBillboardLoc(2,2) < 120)
+        nextTwoBillboardY = [lastTwoBillboardLoc(2,2)+20; lastTwoBillboardLoc(2,2)+40];
+        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);]
+    end
+    % If the car is going down and not near a turn
+    if (~carGoingUp && lastTwoBillboardLoc(2,2) > 40)
+        nextTwoBillboardY = [lastTwoBillboardLoc(2,2)-20; lastTwoBillboardLoc(2,2)-40];
+        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);]
+    end
+    % If the car is going up and just passed y=120
+    
+    % If the car is going up and just passed y=140
+    
+    % If the car is going down and just passed y=40
+    
+    % If the car is going down and just passed y=20
+    nextTwoBillboardLoc = [nextTwoBillboardX, nextTwoBillboardY];
+    oneAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(1,1) && billboardPathLocs(:,2)==nextTwoBillboardLoc(1,2),3);
+    twoAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(2,1) && billboardPathLocs(:,2)==nextTwoBillboardLoc(2,2),3);
+    nextTwoBillboardInd = [oneAheadBillboardInd; twoAheadBillboardInd];
+    seenBillboards = [seenBillboards; nextTwoBillboardInd];
     
     % Run TAG to use CV to identify target billboards that haven't yet been
     % visited and to weed out false positives from the billboards that have
@@ -58,7 +96,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     end
     
     % Write the interest scores to the interest scores file
-    dlmwrite('../NEDE_Game/interestScores.txt',orderedScores','newline', 'pc', 'precision', '%1.5f');
+    dlmwrite('../../NEDE_Game/interestScores.txt',orderedScores','newline', 'pc', 'precision', '%1.5f');
     disp('Interest scores updated.')
 
     %% TSP
@@ -127,16 +165,17 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
         fullPath = vertcat(oldPath(1:stitchPathsInd-1,1:2), fullPath);
         stitchPathPoint = oldPath(stitchPathsInd,1:2);
         tmpFullPath2 = fullPath; % for debugging
-        disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
+        %disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
         disp('Fullpath after stitched with old path: ')
         disp(fullPath)
 
         % Check for 180 degree turns, correct them
-        present180s = true;
-        while present180s
-            %[fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd); 
-            [fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
-        end
+%         present180s = true;
+%         while present180s
+%             %[fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd); 
+%             [fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
+%         end
+        [fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
         tmpFullPath3 = fullPath; % for debugging
         disp('Fullpath after resolve180s: ')
         disp(fullPath)        
@@ -152,9 +191,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
 
         dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
         disp('New carpath defined')
-        disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
+        %disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
     end
     disp(' ')
 end
-
-
