@@ -44,63 +44,6 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     iTargets = classifier_outputs(target_indices,1);
     iDistractors = classifier_outputs(distractor_indices,2) == 0;
     confidence_scores = classifier_outputs(:,3);
-
-    % Find the billboards that have been seen already (plus the next two
-    % that will be seen) so that the TSP doesn't circle back to them.
-    seenBillboards = classifier_outputs(:,1);
-    billboardPathLocs = convertBillboardtoPathLocation(objLocs(:,1:2));
-    billboardPathLocs = [billboardPathLocs,objLocs(:,5)];
-    lastTwoBillboardInd = seenBillboards(end-1:end);
-    lastTwoBillboardLoc = billboardPathLocs(lastTwoBillboardInd+1,1:2);
-    
-    carGoingHor = false;
-    if lastTwoBillboardLoc(2)-lastTwoBillboardLoc(1) > 0
-        carGoingUp = true;
-    elseif lastTwoBillboardLoc(2)-lastTwoBillboardLoc(1) < 0
-        carGoingUp = false;
-    elseif lastTwoBillboardLoc(2)-lastTwoBillboardLoc(1) == 0
-        carGoingHor = true;
-    end
-    % If the car is going up and not near a turn
-    if (carGoingUp && lastTwoBillboardLoc(2,2) < 120)
-        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);]
-        nextTwoBillboardY = [lastTwoBillboardLoc(2,2)+20; lastTwoBillboardLoc(2,2)+40];
-    end
-    % If the car is going down and not near a turn
-    if (~carGoingUp && lastTwoBillboardLoc(2,2) > 40)
-        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);];
-        nextTwoBillboardY = [lastTwoBillboardLoc(2,2)-20; lastTwoBillboardLoc(2,2)-40];
-    end
-    % If the car is going up and just passed y=120
-    if (carGoingUp && lastTwoBillboardLoc(2,2) == 120)
-        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1)+15];
-        nextTwoBillboardY = [140; 140];
-    end
-    % If the car is going up and just passed y=140
-    if (carGoingUp && lastTwoBillboardLoc(2,2) == 140)
-        nextTwoBillboardX = [lastTwoBillboardLoc(2,1)+15; lastTwoBillboardLoc(2,1)+15];
-        nextTwoBillboardY = [140; 120];
-    end
-    % If the car is going down and just passed y=40
-    if (~carGoingUp && lastTwoBillboardLoc(2,2) == 40)
-        nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1)+15];
-        nextTwoBillboardY = [20; 20];
-    end    
-    % If the car is going down and just passed y=20
-    if (~carGoingUp && lastTwoBillboardLoc(2,2) == 20)
-        nextTwoBillboardX = [lastTwoBillboardLoc(2,1)+15; lastTwoBillboardLoc(2,1)+15];
-        nextTwoBillboardY = [20; 40];
-    end 
-    
-    nextTwoBillboardLoc = [nextTwoBillboardX, nextTwoBillboardY];
-    oneAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(1,1) && billboardPathLocs(:,2)==nextTwoBillboardLoc(1,2),3);
-    twoAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(2,1) && billboardPathLocs(:,2)==nextTwoBillboardLoc(2,2),3);
-    nextTwoBillboardInd = [oneAheadBillboardInd; twoAheadBillboardInd];
-    disp('seenBillboards:')
-    disp(seenBillboards)
-    seenBillboards = [seenBillboards; nextTwoBillboardInd];
-    disp('seenBillboards plus the next two: ')
-    disp(seenBillboards)
     
     % Run TAG to use CV to identify target billboards that haven't yet been
     % visited and to weed out false positives from the billboards that have
@@ -134,14 +77,78 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
 
     pathUpdated = false; % Flag to indicate if a new path was written
 
-    % Find the high probability targets
-    highProbTargets = outputOrder(outputScore > thresh);
-    unseenHighProbTargs = highProbTargets(~ismember(highProbTargets,seenBillboards));
+    % Figure out which billboards have already been seen and the next two
+    % billboards that will be seen before the TSP path takes over.
+    if size(classifier_outputs,1) > 3
+        % Find the next the next two billboards that will be seen before the
+        % new car path takes over and add them to seenBillboards so that TSP
+        % doesn't circle back to them.
+        seenBillboards = classifier_outputs(:,1);
+        billboardPathLocs = convertBillboardtoPathLocation(objLocs(:,1:2));
+        billboardPathLocs = [billboardPathLocs,objLocs(:,5)];
+        lastTwoBillboardInd = seenBillboards(end-1:end);
+        lastTwoBillboardLoc = billboardPathLocs(lastTwoBillboardInd+1,1:2);
+
+        carGoingHor = false;
+        carGoingUp = false;
+        if lastTwoBillboardLoc(2,2)-lastTwoBillboardLoc(1,2) > 0
+            carGoingUp = true;
+        elseif lastTwoBillboardLoc(2,2)-lastTwoBillboardLoc(1,2) < 0
+            carGoingUp = false;
+        elseif lastTwoBillboardLoc(2,2)-lastTwoBillboardLoc(1,2) == 0
+            carGoingHor = true;
+        end
+        % If the car is going up and not near a turn
+        if (carGoingUp && lastTwoBillboardLoc(2,2) < 120)
+            nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);]
+            nextTwoBillboardY = [lastTwoBillboardLoc(2,2)+20; lastTwoBillboardLoc(2,2)+40];
+        end
+        % If the car is going down and not near a turn
+        if (~carGoingUp && lastTwoBillboardLoc(2,2) > 40)
+            nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);];
+            nextTwoBillboardY = [lastTwoBillboardLoc(2,2)-20; lastTwoBillboardLoc(2,2)-40];
+        end
+        % If the car is going up and just passed y=120
+        if (carGoingUp && lastTwoBillboardLoc(2,2) == 120)
+            nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1)+15];
+            nextTwoBillboardY = [140; 140];
+        end
+        % If the car is going up and just passed y=140
+        if (carGoingUp && lastTwoBillboardLoc(2,2) == 140)
+            nextTwoBillboardX = [lastTwoBillboardLoc(2,1)+15; lastTwoBillboardLoc(2,1)+15];
+            nextTwoBillboardY = [140; 120];
+        end
+        % If the car is going down and just passed y=40
+        if (~carGoingUp && lastTwoBillboardLoc(2,2) == 40)
+            nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1)+15];
+            nextTwoBillboardY = [20; 20];
+        end    
+        % If the car is going down and just passed y=20
+        if (~carGoingUp && lastTwoBillboardLoc(2,2) == 20)
+            nextTwoBillboardX = [lastTwoBillboardLoc(2,1)+15; lastTwoBillboardLoc(2,1)+15];
+            nextTwoBillboardY = [20; 40];
+        end 
+
+        nextTwoBillboardLoc = [nextTwoBillboardX, nextTwoBillboardY];
+        oneAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(1,1) & billboardPathLocs(:,2)==nextTwoBillboardLoc(1,2),3);
+        twoAheadBillboardInd = billboardPathLocs(billboardPathLocs(:,1)==nextTwoBillboardLoc(2,1) & billboardPathLocs(:,2)==nextTwoBillboardLoc(2,2),3);
+        nextTwoBillboardInd = [oneAheadBillboardInd; twoAheadBillboardInd];
+        %disp('seenBillboards:')
+        %disp(seenBillboards)
+        seenBillboards = [seenBillboards; nextTwoBillboardInd];
+        %disp('seenBillboards plus the next two: ')
+        % disp(seenBillboards)
+    
+        % Find the high probability targets
+        highProbTargets = outputOrder(outputScore > thresh);
+        unseenHighProbTargs = highProbTargets(~ismember(highProbTargets,seenBillboards));
+    end
 
     % Only run TSP once per block (ie if the car is still on the
-    % initialPath). Only run it when there are at least 3 unseen high
-    % probability targets. 
-    if initialPath && length(unseenHighProbTargs) > 3  
+    % initialPath). Only run it when there are at least three 
+    % unseenHighProbTargs. And only run it when we've seen at least three 
+    % billboards already. 
+    if initialPath && (size(classifier_outputs,1)) > 3 && (length(unseenHighProbTargs) >= 3)
         pathUpdated = true;
         display = 0;
         usegridconstraints = true;
@@ -188,12 +195,11 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
         disp(fullPath)
 
         % Check for 180 degree turns, correct them
-%         present180s = true;
-%         while present180s
-%             %[fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd); 
-%             [fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
-%         end
-        [fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
+        present180s = true;
+        while present180s
+            [fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd); 
+        end
+        %[fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
         tmpFullPath3 = fullPath; % for debugging
         disp('Fullpath after resolve180s: ')
         disp(fullPath)        
@@ -204,8 +210,19 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
         disp('Fullpath after interpolation: ')
         disp(fullPath)
 
-        % Remove oldpath
-        % fullPath = fullPath(stitchPathsInd:end,:);    
+        % Run through path and check for errors
+        repeatInd = [];
+        for i = 1:size(fullPath,1)-1
+            % if there is a repeat
+            if fullPath(i,1) == fullPath(i+1,1) && fullPath(i,2) == fullPath(i+1,2)
+                repeatInd = [repeatInd; i];
+            end
+            % if there is an illeagal turn
+            if ~(fullPath(i,1) == fullPath(i+1,1) || fullPath(i,2) == fullPath(i+1,2))
+                error('there is an illegal turn in fullPath')
+            end
+        end
+        fullPath(repeatInd,:) = [];
 
         dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
         disp('New carpath defined')

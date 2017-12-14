@@ -38,7 +38,7 @@ var turnRadius = 5;
 public var points: Vector2[]; //array of points to hit
 var isObjectPoint: float[];
 public var iPoint = 0;
-var iEndPoint = 20;
+//var iEndPoint = 20;
 var nObjToSee = 40;
 var nObjects = 0;
 var distanceTraveled = 0.0; // used to gauge distance between leader and follower
@@ -135,13 +135,13 @@ function StartRoute(iStartPoint: int) {
 	
 	//DetermineiEndPoint
 	iPoint = iStartPoint;
-	iEndPoint = iPoint;
-	var nObjSeen = 0;
-	while ((nObjSeen<nObjToSee) && (iEndPoint<points.length-1)) {
-		iEndPoint++;
-		nObjSeen += isObjectPoint[iEndPoint];
-	}
-	iEndPoint++; // Add one point that we won't actually pass
+//	iEndPoint = iPoint;
+//	var nObjSeen = 0;
+//	while ((nObjSeen<nObjToSee) && (iEndPoint<points.length-1)) {
+//		iEndPoint++;
+//		nObjSeen += isObjectPoint[iEndPoint];
+//	}
+//	iEndPoint++; // Add one point that we won't actually pass
 	
 	//move camera to starting point
 	transform.position = Vector3(points[iPoint].x, transform.position.y, points[iPoint].y);
@@ -175,7 +175,8 @@ function Update () {
 				iPoint++;
 				//Debug.Log("iPoint: " + iPoint);
 
-				if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
+				//if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
+				if (iPoint>=(points.length-2)) { //if this is the end of our path
 					Debug.Log("Passed final obj at time: " + Time.time);
 					EndWalk();
 				}
@@ -189,7 +190,8 @@ function Update () {
 			if (Vector3.Distance(transform.position,moveTarget) < turnRadius) { //if we're close enough to start the turn
 				iPoint++;
 				// check for end of walk
-				if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
+				//if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
+				if (iPoint>=(points.length-2)) { //if this is the end of our path
 					EndWalk();
 				}
 				// update moves
@@ -253,11 +255,13 @@ function FindNextMove(currentPosition: Vector2, currentTarget: Vector2, nextTarg
 function EndWalk() {
 	// The delay allows the unity level to continue until after the full epoch of head-rotation data is collected. For VR version only.
 	yield WaitForSeconds(.9);
-	var placerScript = gameObject.GetComponent(PlaceAll);
-	if (placerScript!=null) { // if this is the object in charge of the trial (the camera with PlaceAll attached), end the level
-		placerScript.EndLevel();
-		Application.LoadLevel("Loader");
-	} else { // otherwise just end the level without cleanup.
-		Application.LoadLevel("Loader");
+	if (transform.root.gameObject.name == "Cams") { // Only have EndLevel called by RobotWalk on the cams object, not by the RobotWalk on the leader object
+		var placerScript = gameObject.GetComponent(PlaceAll);
+		if (placerScript!=null) { // if this is the object in charge of the trial (the camera with PlaceAll attached), end the level
+			placerScript.EndLevel();
+			Application.LoadLevel("Loader");
+		} else { // otherwise just end the level without cleanup.
+			Application.LoadLevel("Loader");
+		}
 	}
 }

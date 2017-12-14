@@ -18,6 +18,8 @@ SINGLE_TRIAL_FEEDBACK = True
 BLOCK_PREDICTION = False
 EPOCH_VERSION = '6'
 TRAINING = False
+NUM_OF_BILLBOARDS = 100
+
 
 # Create LSL outlet
 info = StreamInfo('Python->Matlab', 'classifications', 3)
@@ -31,16 +33,16 @@ print("Inlet Created: Matlab->Python")
 
 # Initialize variables
 counter_epoch = 0
-eeg = np.zeros((64, 385, 20))
-pupil = np.zeros((20,241))
-head_rotation = np.zeros((20,152))
-dwell_time = np.zeros((20))
-stimulus_type = np.zeros((20))
-billboard_id = np.zeros((20))
-billboard_cat = np.zeros((20))
-image_no = np.zeros((20))
-classification = np.zeros((20))
-confidence = np.zeros((20))
+eeg = np.zeros((64, 385, NUM_OF_BILLBOARDS))
+pupil = np.zeros((NUM_OF_BILLBOARDS,241))
+head_rotation = np.zeros((NUM_OF_BILLBOARDS,152))
+dwell_time = np.zeros((NUM_OF_BILLBOARDS))
+stimulus_type = np.zeros((NUM_OF_BILLBOARDS))
+billboard_id = np.zeros((NUM_OF_BILLBOARDS))
+billboard_cat = np.zeros((NUM_OF_BILLBOARDS))
+image_no = np.zeros((NUM_OF_BILLBOARDS))
+classification = np.zeros((NUM_OF_BILLBOARDS))
+confidence = np.zeros((NUM_OF_BILLBOARDS))
 target_cat = 0
 
 # Initialize Deep Learning

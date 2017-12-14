@@ -13,6 +13,7 @@ function newCarPath = interpWaypoints(oldCarPath)
     pointsToInsert = [];
 
     % Iterate through every waypoint in the oldCarPath
+    newPathInd = 1;
     for i = 1:nWayPoints-1
         carGoingUp = false;
         carGoingDown = false;
@@ -66,10 +67,42 @@ function newCarPath = interpWaypoints(oldCarPath)
 
         % Insert new interpolated points into the newCarPath
         if ~isempty(pointsToInsert)
-            newPathInd = find(newCarPath(:,1)==oldCarPath(i,1) & newCarPath(:,2)==oldCarPath(i,2));
             prevPoints = newCarPath(1:newPathInd,:);
             nextPoints = newCarPath(newPathInd+1:end,:);
             newCarPath = [prevPoints; pointsToInsert; nextPoints];
+            newPathInd = newPathInd + size(pointsToInsert,1);
+        end
+        newPathInd = newPathInd + 1;
+        
+        % Add one waypoint to the end of the path so that you can actually
+        % see the last tsp point
+        if i == nWayPoints-1
+            % If car going right and there is room to continue straight
+            if carGoingRight == true && newCarPath(newPathInd,1) < 105
+                newPoint = [newCarPath(newPathInd,1)+15, newCarPath(newPathInd,2)];
+            % If car going right and there is no room to continue straight
+            elseif carGoingRight == true && newCarPath(newPathInd,1) == 105
+                if newCarPath(newPathInd,2) < 60 % car in lower section of grid
+                    newPoint = [105, newCarPath(newPathInd,2) + 20];
+                else
+                    newPoint = [105, newCarPath(newPathInd,2) - 20];
+                end
+            % If car going left and there is room to continue straight   
+            elseif carGoingLeft == true && newCarPath(newPathInd,1) > 0
+                newPoint = [newCarPath(newPathInd,1)-15, newCarPath(newPathInd,2)];
+            % If car going left and there is no room to continue straight
+            elseif carGoingLeft == true && newCarPath(newPathInd,1) == 0
+                if newCarPath(newPathInd,2) < 60 % car in lower section of grid
+                    newPoint = [0, newCarPath(newPathInd,2) + 20];
+                else
+                    newPoint = [0, newCarPath(newPathInd,2) - 20];
+                end
+            elseif carGoingUp == true
+                newPoint = [newCarPath(newPathInd,1), newCarPath(newPathInd,2)+20];
+            elseif carGoingDown == true
+                newPoint = [newCarPath(newPathInd,1), newCarPath(newPathInd,2)-20];
+            end
+            newCarPath = [newCarPath; newPoint];
         end
     end
 end

@@ -1,4 +1,4 @@
-function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd)
+function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathInd)
 
     % only add stitch path point if it isn't already on tspOutput
     if ~any(stitchPathPoint(1) == tspOutput(:,1) & stitchPathPoint(2) == tspOutput(:,2))
@@ -18,6 +18,11 @@ function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoi
             present180s = true;
             % Find the next billboard location
             IndOfCurrLocOnTSPPath = find(all(tspOutput == fullPath(i+1,:),2));
+            if isempty(IndOfCurrLocOnTSPPath)
+                fullPath(i+1,:) = [];
+                newPath = fullPath;
+                break 
+            end
             currBillboardPathLoc = tspOutput(IndOfCurrLocOnTSPPath,:);
             nextBillboardPathLoc = tspOutput(IndOfCurrLocOnTSPPath+1,:);
             IndOfCurrBillboardOnFullPath = find(all(fullPath == currBillboardPathLoc,2));

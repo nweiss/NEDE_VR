@@ -30,7 +30,7 @@ var categories : String[]; //the possible target/distractor categories
 var categoryState : int[];
 var categoryPrevalence : float[];
 var nCategories = 0;
-var nObjToSee = 20;
+var nObjToSee = 40;
 //WHERE
 var locations = "Locations"; //the Tag that contains the available target locations
 var objectSize = 2.0; //(Approximate) height of targets/distractors in meters
@@ -521,6 +521,9 @@ function LateUpdate() {
 		if (unity_from_matlab[0] == -2){
 			delay(2.5);
 			walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+			if (presentationType==Constants.FOLLOW) {
+				leaderWalkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+			}
 			Debug.Log("Cue to update path received");
 		}
 	}
