@@ -212,15 +212,23 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
 
         % Run through path and check for errors
         repeatInd = [];
-        for i = 1:size(fullPath,1)-1
+        for i = 1:size(fullPath,1)-2
             % if there is a repeat
             if fullPath(i,1) == fullPath(i+1,1) && fullPath(i,2) == fullPath(i+1,2)
                 repeatInd = [repeatInd; i];
             end
             % if there is an illeagal turn
             if ~(fullPath(i,1) == fullPath(i+1,1) || fullPath(i,2) == fullPath(i+1,2))
-                error('there is an illegal turn in fullPath')
+                error(['there is an illegal turn in fullPath at ind ', num2str(i)])
             end
+            % if there is a 180
+            goingUpCurr = fullPath(i+1,2) - fullPath(i,2) > 0;
+            goingUpNext = fullPath(i+2,2) - fullPath(i+1,2) > 0;
+            goingHorzCurr = fullPath(i+1,1) ~= fullPath(i,1);
+            goingHorzNext = fullPath(i+2,1) ~= fullPath(i+1,1);
+            if ~(goingHorzCurr || goingHorzNext) && (goingUpCurr ~= goingUpNext)
+                error(['there is an illegal 180 degree turn in fullPath at in', num2str(i)])
+            end 
         end
         fullPath(repeatInd,:) = [];
 

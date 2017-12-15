@@ -80,9 +80,12 @@ private var leaderFlashScript; //the script that makes a truck's lights turn on 
 private var brakeFactor = 0.2; // % of speed during braking
 private var zoomFactor = 1.5;  // % of speed during acceleration
 
+//Neil
 //========================================================
-//Neil	
-//private LSL_BCI_INPUT lsl_script;
+// SETTINGS
+public var interest_spheres_on = true; // Toggle on and off the "interest spheres" that appear in the birds-eye-view
+public var update_car_path_on = true; // Toggle on and off whether the carpath will be updated by the TSP
+
 var isTarget = 0.0;
 var Outlet;
 var oculusPixelWidth = 1920;
@@ -102,7 +105,6 @@ Startup_Object = GameObject.Find("StartupObject");
 var objectLocsFile : StreamWriter = new System.IO.StreamWriter("objectLocs.txt");
 public var feedbackMaterials : Material[];
 var Rend: Renderer;
-public var closedLoop = true; // SETTING THAT TURNS ON AND OFF THE "FEEDBACK SPHERES" MARKING THE USERS INTEREST IN A BILLBOARD
 
 //=========================================================
 
@@ -361,7 +363,7 @@ function Update () {
 		PlaceObjects(objectLocsFile);		 
 
 		// Place the feedback spheres
-		if (closedLoop) {
+		if (interest_spheres_on) {
 			for (var i=0; i<positions.length; i++) {
 				CreateFeedback(i, 0.0);
 			}
@@ -510,7 +512,7 @@ function LateUpdate() {
 	}
 
 	// Update colors of feedback spheres based on interest scores
-	if (closedLoop) {
+	if (interest_spheres_on) {
 		unity_from_matlab = Startup_Object.GetComponent(LSL_BCI_Input).receiveLSL();
 		//if matlab has pushed a cue to update the 
 		if (unity_from_matlab[0] < 0){
@@ -518,7 +520,9 @@ function LateUpdate() {
 			Debug.Log("Cue to update feedback spheres received");
 			updateFeedback();
 		}
-		if (unity_from_matlab[0] == -2){
+	}
+	if (update_car_path_on) {
+		if (unity_from_matlab[0] == -2) {
 			delay(2.5);
 			walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
 			if (presentationType==Constants.FOLLOW) {

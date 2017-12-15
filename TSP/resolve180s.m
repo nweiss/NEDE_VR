@@ -56,21 +56,26 @@ function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoi
             end
             % same column as the current billboard (true 180 needed)
             if currBillboardPathLoc(1) == nextBillboardPathLoc(1)
+                if fullPath(i+1,1) < 105
+                    newColumn = fullPath(i+1,1) + 15;
+                else
+                    newColumn = fullPath(i+1,1) - 15;
+                end
                 % If the car is going up
                 if goingUpCurr == true
                     newPathAddition(1,1:2) = [fullPath(i+1,1) fullPath(i+1,2)+10]; % don't turn around
-                    newPathAddition(2,1:2) = [fullPath(i+1,1)+15 fullPath(i+1,2)+10]; % right turn! Left would work too.
-                    newPathAddition(3,1:2) = [fullPath(i+1,1)+15 fullPath(i+1,2)]; % right turn again! Left would work too.
-                    newPathAddition(4,1:2) = [fullPath(i+1,1)+15 fullPath(i+1,2)-10]; % right turn! Left would work too.
-                    newPathAddition(5,1:2) = [fullPath(i+1,1) fullPath(i+1,2)-10]; % right turn! Left would work too.
+                    newPathAddition(2,1:2) = [newColumn fullPath(i+1,2)+10]; 
+                    newPathAddition(3,1:2) = [newColumn fullPath(i+1,2)]; 
+                    newPathAddition(4,1:2) = [newColumn fullPath(i+1,2)-10]; 
+                    newPathAddition(5,1:2) = [fullPath(i+1,1) fullPath(i+1,2)-10]; 
                     newCarPath = [newPathAddition; nextBillboardPathLoc];
                 end
                 % If the car is going down
                 if goingUpCurr == false
                     newPathAddition(1,1:2) = [fullPath(i+1,1) fullPath(i+1,2)+10]; % don't turn around
-                    newPathAddition(2,1:2) = [fullPath(i+1,1)+15 fullPath(i+1,2)+10]; % right turn! Left would work too.
-                    newPathAddition(3,1:2) = [fullPath(i+1,1)+15 fullPath(i+1,2)]; % right turn again! Left would work too.
-                    newPathAddition(4,1:2) = [fullPath(i+1,1)+15 fullPath(i+1,2)-10]; % right turn! Left would work too.
+                    newPathAddition(2,1:2) = [newColumn fullPath(i+1,2)+10]; % right turn! Left would work too.
+                    newPathAddition(3,1:2) = [newColumn fullPath(i+1,2)]; % right turn again! Left would work too.
+                    newPathAddition(4,1:2) = [newColumn fullPath(i+1,2)-10]; % right turn! Left would work too.
                     newPathAddition(5,1:2) = [fullPath(i+1,1) fullPath(i+1,2)-10]; % right turn! Left would work too.
                     newCarPath = [newPathAddition; nextBillboardPathLoc];
                 end

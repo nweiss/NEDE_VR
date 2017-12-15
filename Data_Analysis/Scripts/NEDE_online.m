@@ -63,8 +63,6 @@ oculus_fov = 106.188; % Field of view of oculus in degrees (Unity lists it)
 oculus_pixels_x = 1915; % Pixels in oculus in the horizontal direction, found empirically
 allowedDiscrepency = 6*oculus_pixels_x/oculus_fov; % Number of degrees to expand the bounding box of billboards for fixation
 
-block_duration = 140; % Upper bound used to initialize data storage variables (seconds) 
-trials_per_block = 20;
 n_chan = 64;
 freq_eye = 60;
 freq_unity = 75;
@@ -222,6 +220,17 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     fprintf('\n')
 
     %% Initialize Data Storage Variables
+    % During training, a single block is the standard 20 billboards. When
+    % updating the carpath in real time though, allow for a much longer
+    % carpath
+    if ~UPDATE_CAR_PATH
+        block_duration = 140; % Upper bound used to initialize data storage variables (seconds) 
+        trials_per_block = 20;
+    else
+        block_duration = 300;
+        trials_per_block = 100;
+    end
+    
     left_border = zeros(1, ceil(block_duration * freq_eye)); % boarder of the onscreen billboard in pixels in oculus space, in eye-time
     right_border = zeros(1, ceil(block_duration * freq_eye));
     isFixated = zeros(1,floor(block_duration*freq_eye)); % Flag for if eye point-of-regard is fixated within bounding box of billboard
