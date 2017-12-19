@@ -50,14 +50,14 @@ newPath = fullPath;
 % end
 
 
-for i = 1:size(fullPath,1)-1
-    % if there is a repeat
-    if fullPath(i,1) == fullPath(i+1,1) && fullPath(i,2) == fullPath(i+1,2)
-        error('repeat present in fullPath')
-    end
-    % if there is an illeagal turn
-    if ~(fullPath(i,1) == fullPath(i+1,1) || fullPath(i,2) == fullPath(i+1,2))
-        error('there is an illegal turn in fullPath')
-    end
-end
+% for i = 1:size(fullPath,1)-1
+%     % if there is a repeat
+%     if fullPath(i,1) == fullPath(i+1,1) && fullPath(i,2) == fullPath(i+1,2)
+%         error('repeat present in fullPath')
+%     end
+%     % if there is an illeagal turn
+%     if ~(fullPath(i,1) == fullPath(i+1,1) || fullPath(i,2) == fullPath(i+1,2))
+%         error('there is an illegal turn in fullPath')
+%     end
+% end
 disp('done')

@@ -1,4 +1,4 @@
-function newCarPath = interpWaypoints(oldCarPath)
+function newCarPath = interpWaypoints(oldCarPath,add_final_point)
 
     % oldCarPath is a set of waypoints for the carpath that only has the
     % corners of turns.
@@ -76,7 +76,7 @@ function newCarPath = interpWaypoints(oldCarPath)
         
         % Add one waypoint to the end of the path so that you can actually
         % see the last tsp point
-        if i == nWayPoints-1
+        if i == nWayPoints-1 && add_final_point
             % If car going right and there is room to continue straight
             if carGoingRight == true && newCarPath(newPathInd,1) < 105
                 newPoint = [newCarPath(newPathInd,1)+15, newCarPath(newPathInd,2)];

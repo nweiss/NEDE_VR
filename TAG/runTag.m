@@ -205,7 +205,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
         disp(fullPath)        
         
         % Interpolate waypoints in between the turns
-        fullPath = interpWaypoints(fullPath);
+        fullPath = interpWaypoints(fullPath,1);
         tmpFullPath4 = fullPath; % for debugging
         disp('Fullpath after interpolation: ')
         disp(fullPath)
