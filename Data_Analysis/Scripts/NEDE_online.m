@@ -19,8 +19,8 @@ SAVE_EPOCHED_DATA = false;
 PLOTS = false;
 
 EPOCHED_VERSION = 7; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '13';
-BLOCK = '13'; % First block in batch
+SUBJECT_ID = '11';
+BLOCK = '1'; % First block in batch
 nBLOCKS = 1; % Number of blocks to do in batch
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
@@ -666,6 +666,20 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 disp('received classification from python');
                 classification = [classification; a];
                 
+                
+                % Print classification updates
+                if classification(counter_epoch-1,2) == 1 && Billboard.stimulus_type(counter_epoch-1) == 1
+                    disp('Target correctly identified')
+                elseif classification(counter_epoch-1,2) == 0 && Billboard.stimulus_type(counter_epoch-1) == 1
+                    disp('Target classified as non-target')
+                elseif classification(counter_epoch-1,2) == 1 && Billboard.stimulus_type(counter_epoch-1) == 2
+                    disp('non-Target classified as target')
+                elseif classification(counter_epoch-1,2) == 0 && Billboard.stimulus_type(counter_epoch-1) == 2
+                    disp('non-Target correctly classified')
+                end
+                    
+                
+                
                 if initialPath
                    oldPath = dlmread('../../NEDE_Game/NedeConfig/grid.txt',',');
                 else
@@ -852,4 +866,19 @@ if UPDATE_CAR_PATH || UPDATE_INTEREST_SPHERES
     disp('Matlab->Unity outlet closed')
 end
 
+Billboard.stimulus_type = Billboard.stimulus_type(1:length(classification));
+true_pos = (Billboard.stimulus_type == 1)' & classification(:,2) == 1;
+true_neg = (Billboard.stimulus_type == 2)' & classification(:,2) == 0;
+true_class = true_pos | true_neg;
+accuracy = sum(true_class)/length(true_class);
+
+tpr = sum(true_pos) / length(find(Billboard.stimulus_type==1));
+fpr = sum(true_neg) / length(find(Billboard.stimulus_type==2));
+balanced_accuracy = mean([tpr fpr]);
+disp(['balanced acc: ' num2str(balanced_accuracy)]);
+disp(['true positive rate: ' num2str(tpr)]);
+disp(['false positive rate: ' num2str(fpr)]);
+
+
+disp()
 disp('done')

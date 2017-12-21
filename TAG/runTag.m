@@ -16,7 +16,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     
     % Thresh is the threshold for the TAG output [0-1] that we use to
     % define a high probability target for the TSP
-    thresh = 0.05;
+    thresh = 0.25;
     
     %% TAG
     objLocs = dlmread('../../NEDE_Game/objectLocs.txt',',');
@@ -79,7 +79,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
 
     % Figure out which billboards have already been seen and the next two
     % billboards that will be seen before the TSP path takes over.
-    if size(classifier_outputs,1) > 3
+    if size(classifier_outputs,1) > 5
         % Find the next the next two billboards that will be seen before the
         % new car path takes over and add them to seenBillboards so that TSP
         % doesn't circle back to them.

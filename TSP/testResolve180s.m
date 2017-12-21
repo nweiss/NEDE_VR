@@ -9,7 +9,7 @@ load('stitchPathPoint')
 present180s = true;
 oldPath = fullPath;
 while present180s
-    [fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathInd); 
+    [fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint); 
 end
 newPath = fullPath;
 

@@ -4,12 +4,12 @@
 clear all; clc; close all;
 
 %% SETTINGS
-DATA_VERSION_NO = '6';
+DATA_VERSION_NO = '3';
 SAVE_ON = true;
 
 % Number of blocks recorded for each subject
 BLOCKS = [13,9,0,13,16,33,23,42,0,39,40,0,40];
-SUBJECTS = 13; %[1,2,4,5,6,7,8];
+SUBJECTS = [10,11];
 
 % Delete trials with extreme head rotation values. This happens occasionaly
 % on the last stimulus of a block if the game exits before the end of the
@@ -39,7 +39,7 @@ target_category_agg = [];
 subject = [];
 block = [];
 
-for i = 13% SUBJECTS
+for i = 1:max(SUBJECTS)% SUBJECTS
     for j = 1:BLOCKS(i)
         clear dwell_time
         clear eeg
