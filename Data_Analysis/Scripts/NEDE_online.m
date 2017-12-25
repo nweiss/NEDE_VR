@@ -879,6 +879,4 @@ disp(['balanced acc: ' num2str(balanced_accuracy)]);
 disp(['true positive rate: ' num2str(tpr)]);
 disp(['false positive rate: ' num2str(fpr)]);
 
-
-disp()
 disp('done')

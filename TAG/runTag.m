@@ -16,7 +16,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     
     % Thresh is the threshold for the TAG output [0-1] that we use to
     % define a high probability target for the TSP
-    thresh = 0.25;
+    thresh = 0.05;
     
     %% TAG
     objLocs = dlmread('../../NEDE_Game/objectLocs.txt',',');
@@ -100,7 +100,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
         end
         % If the car is going up and not near a turn
         if (carGoingUp && lastTwoBillboardLoc(2,2) < 120)
-            nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1);]
+            nextTwoBillboardX = [lastTwoBillboardLoc(2,1); lastTwoBillboardLoc(2,1)];
             nextTwoBillboardY = [lastTwoBillboardLoc(2,2)+20; lastTwoBillboardLoc(2,2)+40];
         end
         % If the car is going down and not near a turn
@@ -148,93 +148,111 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     % initialPath). Only run it when there are at least three 
     % unseenHighProbTargs. And only run it when we've seen at least three 
     % billboards already. 
-    if initialPath && (size(classifier_outputs,1)) > 3 && (length(unseenHighProbTargs) >= 3)
-        pathUpdated = true;
-        display = 0;
-        usegridconstraints = true;
-        billboardLocations = objLocs(unseenHighProbTargs,1:2);
-        [startingLocation, stitchPathsInd] = getStartingLocation(classifier_outputs(end,1),objLocs,oldPath,numBillboardsSeen); 
-        pathLocations = [startingLocation; convertBillboardtoPathLocation(billboardLocations)];
-        tspOutput = solveTSP(pathLocations, display, usegridconstraints);
+    if initialPath && (size(classifier_outputs,1)) > 3 && exist('unseenHighProbTargs')
+        if (length(unseenHighProbTargs) >= 3)
+            
+            % Print out the predicted category of interest
+            disp(['There are ', num2str(length(unseenHighProbTargs)),' predicted targets from the following categories: '])
+            for i = 1:length(unseenHighProbTargs)
+                disp(objectList{unseenHighProbTargs(i)}) 
+            end
+            
+            pathUpdated = true;
+            display = 0;
+            usegridconstraints = true;
+            billboardLocations = objLocs(unseenHighProbTargs,1:2);
+            [startingLocation, stitchPathsInd] = getStartingLocation(classifier_outputs(end,1),objLocs,oldPath,numBillboardsSeen); 
+            pathLocations = [startingLocation; convertBillboardtoPathLocation(billboardLocations)];
+            tspOutput = solveTSP(pathLocations, display, usegridconstraints);
 
-        % If the startingLoc is a position of interest, it will appear
-        % twice. If that is true, remove the repeat.
-        if tspOutput(1,:) == tspOutput(2,:)
-            tspOutput(2,:) = [];
-        end
+            % If the startingLoc is a position of interest, it will appear
+            % twice. If that is true, remove the repeat.
+            if tspOutput(1,:) == tspOutput(2,:)
+                tspOutput(2,:) = [];
+            end
 
-        disp('tspOutput: ')
-        disp(tspOutput)
+            disp('tspOutput: ')
+            disp(tspOutput)
 
-        % Insert waypoints at turn corners
-        fullPath = [];
-        for i = 1:length(tspOutput)-1
-            fullPath = [fullPath; tspOutput(i,:)];
-            if tspOutput(i,1) ~= tspOutput(i+1,1)
-                if fullPath(end) - fullPath(end-1) > 0 %going up
-                    turningY = tspOutput(i,2) + 10;
-                elseif fullPath(end) - fullPath(end-1) < 0 %going down
-                    turningY = tspOutput(i,2) - 10;
-                else
-                    error('car not going up or down');
+            % Insert waypoints at turn corners
+            fullPath = [];
+            for i = 1:length(tspOutput)-1
+                fullPath = [fullPath; tspOutput(i,:)];
+                if tspOutput(i,1) ~= tspOutput(i+1,1)
+                    if fullPath(end) - fullPath(end-1) > 0 %going up
+                        turningY = tspOutput(i,2) + 10;
+                    elseif fullPath(end) - fullPath(end-1) < 0 %going down
+                        turningY = tspOutput(i,2) - 10;
+                    else
+                        error('car not going up or down');
+                    end
+                    fullPath = [fullPath; [tspOutput(i,1) turningY]; [tspOutput(i+1,1) turningY]];
                 end
-                fullPath = [fullPath; [tspOutput(i,1) turningY]; [tspOutput(i+1,1) turningY]];
             end
-        end
-        fullPath = [fullPath; tspOutput(i+1,:)];
-        tmpFullPath1 = fullPath; % for debugging
-        disp('Fullpath after turns inserted: ')
-        disp(fullPath)
+            fullPath = [fullPath; tspOutput(i+1,:)];
+            tmpFullPath1 = fullPath; % for debugging
+            disp('Fullpath after turns inserted: ')
+            disp(fullPath)
 
-        % Stitch together the old path and the new path
-        fullPath = vertcat(oldPath(1:stitchPathsInd-1,1:2), fullPath);
-        stitchPathPoint = oldPath(stitchPathsInd,1:2);
-        tmpFullPath2 = fullPath; % for debugging
-        %disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
-        disp('Fullpath after stitched with old path: ')
-        disp(fullPath)
+            % Stitch together the old path and the new path
+            fullPath = vertcat(oldPath(1:stitchPathsInd-1,1:2), fullPath);
+            stitchPathPoint = oldPath(stitchPathsInd,1:2);
+            tmpFullPath2 = fullPath; % for debugging
+            %disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
+            disp('Fullpath after stitched with old path: ')
+            disp(fullPath)
+            
+            
 
-        % Check for 180 degree turns, correct them
-        present180s = true;
-        while present180s
-            [fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint, stitchPathsInd); 
-        end
-        %[fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
-        tmpFullPath3 = fullPath; % for debugging
-        disp('Fullpath after resolve180s: ')
-        disp(fullPath)        
-        
-        % Interpolate waypoints in between the turns
-        fullPath = interpWaypoints(fullPath,1);
-        tmpFullPath4 = fullPath; % for debugging
-        disp('Fullpath after interpolation: ')
-        disp(fullPath)
-
-        % Run through path and check for errors
-        repeatInd = [];
-        for i = 1:size(fullPath,1)-2
-            % if there is a repeat
-            if fullPath(i,1) == fullPath(i+1,1) && fullPath(i,2) == fullPath(i+1,2)
-                repeatInd = [repeatInd; i];
+            % Check for 180 degree turns, correct them
+            file1 = fullfile('..','..','TSP','fullPath.mat');
+            save(file1,'fullPath');
+            file2 = fullfile('..','..','TSP','tspOutput.mat');
+            save(file2,'tspOutput');
+            file3 = fullfile('..','..','TSP','stitchPathPoint.mat');
+            save(file3,'stitchPathPoint');
+            
+            present180s = true;
+            while present180s
+                [fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint); 
             end
-            % if there is an illeagal turn
-            if ~(fullPath(i,1) == fullPath(i+1,1) || fullPath(i,2) == fullPath(i+1,2))
-                error(['there is an illegal turn in fullPath at ind ', num2str(i)])
-            end
-            % if there is a 180
-            goingUpCurr = fullPath(i+1,2) - fullPath(i,2) > 0;
-            goingUpNext = fullPath(i+2,2) - fullPath(i+1,2) > 0;
-            goingHorzCurr = fullPath(i+1,1) ~= fullPath(i,1);
-            goingHorzNext = fullPath(i+2,1) ~= fullPath(i+1,1);
-            if ~(goingHorzCurr || goingHorzNext) && (goingUpCurr ~= goingUpNext)
-                error(['there is an illegal 180 degree turn in fullPath at in', num2str(i)])
-            end 
-        end
-        fullPath(repeatInd,:) = [];
+            %[fullPath, present180s] = resolve180s_v2(fullPath, tspOutput);
+            tmpFullPath3 = fullPath; % for debugging
+            disp('Fullpath after resolve180s: ')
+            disp(fullPath)        
 
-        dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
-        disp('New carpath defined')
-        %disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
+            % Interpolate waypoints in between the turns
+            fullPath = interpWaypoints(fullPath,1);
+            tmpFullPath4 = fullPath; % for debugging
+            disp('Fullpath after interpolation: ')
+            disp(fullPath)
+
+            % Run through path and check for errors
+            repeatInd = [];
+            for i = 1:size(fullPath,1)-2
+                % if there is a repeat
+                if fullPath(i,1) == fullPath(i+1,1) && fullPath(i,2) == fullPath(i+1,2)
+                    repeatInd = [repeatInd; i];
+                end
+                % if there is an illeagal turn
+                if ~(fullPath(i,1) == fullPath(i+1,1) || fullPath(i,2) == fullPath(i+1,2))
+                    error(['there is an illegal turn in fullPath at ind ', num2str(i)])
+                end
+                % if there is a 180
+                goingUpCurr = fullPath(i+1,2) - fullPath(i,2) > 0;
+                goingUpNext = fullPath(i+2,2) - fullPath(i+1,2) > 0;
+                goingHorzCurr = fullPath(i+1,1) ~= fullPath(i,1);
+                goingHorzNext = fullPath(i+2,1) ~= fullPath(i+1,1);
+                if ~(goingHorzCurr || goingHorzNext) && (goingUpCurr ~= goingUpNext)
+                    error(['there is an illegal 180 degree turn in fullPath at in', num2str(i)])
+                end 
+            end
+            fullPath(repeatInd,:) = [];
+
+            dlmwrite('../../NEDE_Game/NedeConfig/newCarPath.txt', horzcat(fullPath,zeros(length(fullPath),1)),'delimiter', ',','newline','pc');
+            disp('New carpath defined')
+            %disp(['stitchPathsInd: ' num2str(stitchPathsInd)])
+        end
     end
     disp(' ')
 end

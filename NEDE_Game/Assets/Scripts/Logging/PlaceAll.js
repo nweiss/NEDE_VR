@@ -97,8 +97,8 @@ var isObjOnRight = false;
 var isBrakeLights = 0.0;
 var isButtonPress = 0;
 var Inlet = null;
-var feedback_sphere : GameObject[];
-var feedback_cube : GameObject[];
+var feedback_sphere : GameObject;
+var feedback_cube : GameObject;
 var feedback_object : GameObject;
 var Startup_Object : GameObject;
 Startup_Object = GameObject.Find("StartupObject");
@@ -656,9 +656,20 @@ function PlaceObjects(objectLocsFile: StreamWriter) {
 
 //---CREATE OBJECTS FOR CLOSED LOOP FEEDBACK
 function CreateFeedback(objInd : int, interestScore : float) {
-	// Map the confidence from 0-1 to an int between 0-5 
-	sphere_num = Mathf.Round(5*interestScore);
-	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[objInd].transform.position + Vector3(0, 3, 0), transform.rotation);
+//	// Map the confidence from 0-1 to an int between 0-5 
+//	sphere_num = Mathf.Round(5*interestScore);
+//	feedback_object = Instantiate(feedback_sphere[sphere_num], objectsInPlay[objInd].transform.position + Vector3(0, 3, 0), transform.rotation);
+//	feedback_object.layer = LayerMask.NameToLayer("UI");
+//	feedback_object.name = "feedback_obj" + objInd;
+
+	// Map the confidence from 0-1 to an int between 0-5
+	if(objectsInPlay[objInd].tag == "DistractorObject") { 
+		feedback_object = Instantiate(feedback_sphere, objectsInPlay[objInd].transform.position + Vector3(0, 7, 0), transform.rotation);
+	}
+	if(objectsInPlay[objInd].tag == "TargetObject") { 
+		feedback_object = Instantiate(feedback_cube, objectsInPlay[objInd].transform.position + Vector3(0, 7, 0), transform.rotation);
+	}
+
 	feedback_object.layer = LayerMask.NameToLayer("UI");
 	feedback_object.name = "feedback_obj" + objInd;
 }

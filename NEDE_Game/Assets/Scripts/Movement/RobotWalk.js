@@ -176,7 +176,7 @@ function Update () {
 				//Debug.Log("iPoint: " + iPoint);
 
 				//if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
-				if (iPoint>=(points.length-2)) { //if this is the end of our path
+				if (iPoint>=(points.length-1)) { //if this is the end of our path
 					Debug.Log("Passed final obj at time: " + Time.time);
 					EndWalk();
 				}
@@ -191,7 +191,7 @@ function Update () {
 				iPoint++;
 				// check for end of walk
 				//if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
-				if (iPoint>=(points.length-2)) { //if this is the end of our path
+				if (iPoint>=(points.length-1)) { //if this is the end of our path
 					EndWalk();
 				}
 				// update moves
