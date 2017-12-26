@@ -113,7 +113,7 @@ Hd_lp_pupil = design(h_lp_pupil, 'cheby2', 'MatchExactly', match);
 % Load LSL libraries
 if UNITY||EEG_connected||EYE_connected||PYTHON
     addpath(genpath(fullfile('..','liblsl-Matlab')));
-    addpath('..','dependancies')
+    addpath(fullfile('..','Dependancies'))
     lib = lsl_loadlib();
 end
 
