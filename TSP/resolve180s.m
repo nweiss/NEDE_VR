@@ -1,4 +1,4 @@
-function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint)
+function [newPath, present180s, tspOutput] = resolve180s(fullPath, tspOutput, stitchPathPoint)
 
     % only add stitch path point if it isn't already on tspOutput
     if ~any(stitchPathPoint(1) == tspOutput(:,1) & stitchPathPoint(2) == tspOutput(:,2))
@@ -6,9 +6,36 @@ function [newPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoi
     end
     present180s = false;
     newPath = fullPath;
+    
+    % Check to see if every point in tspOutput has been passed. If it has,
+    % cut off the path immediately after they are all passed. Also, change
+    % the order of tspOutput to match the order in which the billboards are
+    % passed.
+    tspOutputPassed = zeros(length(tspOutput),1);
+    tspOutputPassedOrder = zeros(length(tspOutput),1);
+    tspCounter = 1;
+    for i = 1:length(fullPath)-2
+        disp(i)
+        indOfTSPOutputPassed = find(all(tspOutput == fullPath(i,:),2));
+        if ~isempty(indOfTSPOutputPassed)
+            tspOutputPassed(indOfTSPOutputPassed) = 1;
+            tspOutputPassedOrder(tspCounter) = indOfTSPOutputPassed;
+            tspCounter = tspCounter + 1;
+            disp(['fullpath ind: ' num2str(i)])
+            disp(['tspOutput ind: ' num2str(indOfTSPOutputPassed)])
+            if all(tspOutputPassed)
+                newPath = fullPath(1:i,:);
+                tspOutput = tspOutput(tspOutputPassedOrder,:);
+                disp('Passed all billboards in tspOutput')
+                break
+            end
+        end
+    end
+    
     % Check for 180 degree turns, correct them
     for i = 1:length(fullPath)-2        
         
+        % Delete any duplicates
         if all(fullPath(i+1,:) == fullPath(i,:))
             present180s = true;
             fullPath(i+1,:) = [];

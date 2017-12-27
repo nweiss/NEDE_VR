@@ -18,6 +18,16 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     % define a high probability target for the TSP
     thresh = 0.05;
     
+    %% DEBUG RUNTAG
+    file1 = fullfile('..','..','TAG','classifier_outputs.mat');
+    save(file1,'classifier_outputs');
+    file2 = fullfile('..','..','TAG','oldPath.mat');
+    save(file2,'oldPath');
+    file3 = fullfile('..','..','TAG','numBillboardsSeen.mat');
+    save(file3,'numBillboardsSeen');
+    file4 = fullfile('..','..','TAG','initialPath.mat');
+    save(file4,'initialPath');
+    
     %% TAG
     objLocs = dlmread('../../NEDE_Game/objectLocs.txt',',');
 
@@ -202,9 +212,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
             disp('Fullpath after stitched with old path: ')
             disp(fullPath)
             
-            
-
-            % Check for 180 degree turns, correct them
+            %% DEBUG RESOLVE180s
             file1 = fullfile('..','..','TSP','fullPath.mat');
             save(file1,'fullPath');
             file2 = fullfile('..','..','TSP','tspOutput.mat');
@@ -212,6 +220,8 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
             file3 = fullfile('..','..','TSP','stitchPathPoint.mat');
             save(file3,'stitchPathPoint');
             
+
+            % Check for 180 degree turns, correct them
             present180s = true;
             while present180s
                 [fullPath, present180s] = resolve180s(fullPath, tspOutput, stitchPathPoint); 
