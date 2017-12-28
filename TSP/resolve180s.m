@@ -14,9 +14,9 @@ function [newPath, present180s, tspOutput] = resolve180s(fullPath, tspOutput, st
     tspOutputPassed = zeros(length(tspOutput),1);
     tspOutputPassedOrder = zeros(length(tspOutput),1);
     tspCounter = 1;
-    for i = 1:length(fullPath)-2
+    for i = 1:length(fullPath)-1
         disp(i)
-        indOfTSPOutputPassed = find(all(tspOutput == fullPath(i,:),2));
+        indOfTSPOutputPassed = find(all(tspOutput(:,1) == fullPath(i,1) & tspOutput(:,2) == fullPath(i,2),2));
         if ~isempty(indOfTSPOutputPassed)
             tspOutputPassed(indOfTSPOutputPassed) = 1;
             tspOutputPassedOrder(tspCounter) = indOfTSPOutputPassed;
@@ -27,7 +27,7 @@ function [newPath, present180s, tspOutput] = resolve180s(fullPath, tspOutput, st
                 newPath = fullPath(1:i,:);
                 tspOutput = tspOutput(tspOutputPassedOrder,:);
                 disp('Passed all billboards in tspOutput')
-                break
+                return
             end
         end
     end
@@ -40,7 +40,7 @@ function [newPath, present180s, tspOutput] = resolve180s(fullPath, tspOutput, st
             present180s = true;
             fullPath(i+1,:) = [];
             newPath = fullPath;
-            break
+            return
         end
    
         goingUpCurr = fullPath(i+1,2) - fullPath(i,2) > 0;
@@ -56,16 +56,16 @@ function [newPath, present180s, tspOutput] = resolve180s(fullPath, tspOutput, st
         if (goingLeftCurr == 1 && goingRightNext == 1) || (goingRightCurr == 1 && goingLeftNext == 1) || (goingUpCurr == 1 && goingDownNext == 1) || (goingDownCurr == 1 && goingUpNext == 1)
             present180s = true;
             % Find the next billboard location
-            IndOfCurrLocOnTSPPath = find(all(tspOutput == fullPath(i+1,:),2));
+            IndOfCurrLocOnTSPPath = find(all(tspOutput(:,1) == fullPath(i+1,1) & tspOutput(:,2) == fullPath(i+1,2),2));
             if isempty(IndOfCurrLocOnTSPPath)
                 fullPath(i+1,:) = [];
                 newPath = fullPath;
-                break
+                return
             end
             currBillboardPathLoc = tspOutput(IndOfCurrLocOnTSPPath,:);
             nextBillboardPathLoc = tspOutput(IndOfCurrLocOnTSPPath+1,:);
-            IndOfCurrBillboardOnFullPath = find(all(fullPath == currBillboardPathLoc,2));
-            IndOfNextBillboardOnFullPath = find(all(fullPath == nextBillboardPathLoc,2));
+            IndOfCurrBillboardOnFullPath = find(all(fullPath(:,1) == currBillboardPathLoc(1) & fullPath(:,2) == currBillboardPathLoc(2),2));
+            IndOfNextBillboardOnFullPath = find(all(fullPath(:,1) == nextBillboardPathLoc(1) & fullPath(:,2) == nextBillboardPathLoc(2),2));
 
             % If the next billboard is in the same column of the grid
             % level as the current billboard
@@ -117,10 +117,10 @@ function [newPath, present180s, tspOutput] = resolve180s(fullPath, tspOutput, st
                     newPathAddition(5,1:2) = [fullPath(i+1,1) fullPath(i+1,2)+10]; % right turn! Left would work too.
                     newCarPath = [newPathAddition; nextBillboardPathLoc];
                 end
-           end
-        newPath = [fullPath(1:IndOfCurrBillboardOnFullPath-1,:); newCarPath; fullPath(IndOfNextBillboardOnFullPath+1:end,:)];
-        newPath = interpWaypoints(newPath,0);
-        break
+            end
+            newPath = [fullPath(1:IndOfCurrBillboardOnFullPath-1,:); newCarPath; fullPath(IndOfNextBillboardOnFullPath+1:end,:)];
+            newPath = interpWaypoints(newPath,0);
+            return
         end 
     end
 end

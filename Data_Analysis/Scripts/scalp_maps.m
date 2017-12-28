@@ -34,6 +34,6 @@ eeg = EEG;
 EEGTarg = pop_importdata('setname','targets','data',eeg{SUBJ}(:,:,stimulus_type{SUBJ}==1), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
 EEGDist = pop_importdata('setname','distractors','data',eeg{SUBJ}(:,:,stimulus_type{SUBJ}==0), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
 ALLEEG = [EEGTarg, EEGDist];
-pop_comperp(ALLEEG,1,1,2,'ylim',ylim,'title','Targets-Distractors','addavg','on','subavg','on');%'addavg','on','subavg','on','diffavg','on');
+pop_comperp(ALLEEG,1,1,2,'ylim',ylim,'title','Targets-Distractors','addavg','on','subavg','on');
 
 disp('Done!')
