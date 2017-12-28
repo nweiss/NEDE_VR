@@ -1,8 +1,10 @@
-function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,initialPath)
+function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,initialPath,trueLabels)
     
     % Inputs:
     %   - initialPath: a flag indicating if the car is still following the
     %     initial (grid) path
+    %   - trueLabels: the true labels of the billboards in order of
+    %   presentation (1=targ,2=dist).
     % 
     % Outputs:
     %   - pathUpdated is a boolean indicating whether or not there was
@@ -27,6 +29,8 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     save(file3,'numBillboardsSeen');
     file4 = fullfile('..','..','TAG','initialPath.mat');
     save(file4,'initialPath');
+    file5 = fullfile('..','..','TAG','trueLabels.mat');
+    save(file5,'trueLabels');
     
     %% TAG
     objLocs = dlmread('../../NEDE_Game/objectLocs.txt',',');
@@ -61,13 +65,23 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     [outputOrder,outputScore,isSelfTunedTarget] = RerankObjectsWithTag(objectList,iTargets,nSensitivity,graph_1.graph);
 
     % create ordered scores, the interest scores in order of billboardID
-    orderedScores = zeros(1,length(outputOrder));
+    orderedTagScores = zeros(1,length(outputOrder));
     for i = 1:length(outputOrder)
-        orderedScores(i) = outputScore(outputOrder == i);
+        orderedTagScores(i) = outputScore(outputOrder == i);
+    end
+    
+    % Create an ordered vector of classifier outputs for billboards that have already been passed.
+    orderedClassifierOutputs = zeros(length(orderedTagScores),1);
+    trueLabels = convertLabels(trueLabels(1:length(orderedClassifierOutputs)));
+    orderedTrueLabels = -1*ones(length(orderedClassifierOutputs),1);
+    for i = 1:size(classifier_outputs,1)
+        orderedClassifierOutputs(classifier_outputs(i,1)+1) = classifier_outputs(i,3);
+        orderedTrueLabels(classifier_outputs(i,1)+1) = trueLabels(i);
     end
     
     % Write the interest scores to the interest scores file
-    dlmwrite('../../NEDE_Game/interestScores.txt',orderedScores','newline', 'pc', 'precision', '%1.5f');
+    interestScoreTable = [orderedTagScores',orderedClassifierOutputs,orderedTrueLabels];
+    dlmwrite('../../NEDE_Game/interestScores.txt',interestScoreTable,'newline', 'pc', 'precision', '%1.5f');
     disp('Interest scores updated.')
 
     %% TSP

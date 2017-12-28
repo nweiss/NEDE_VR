@@ -15,18 +15,18 @@ function [newPath, present180s, tspOutput] = resolve180s(fullPath, tspOutput, st
     tspOutputPassedOrder = zeros(length(tspOutput),1);
     tspCounter = 1;
     for i = 1:length(fullPath)-1
-        disp(i)
+        %disp(i)
         indOfTSPOutputPassed = find(all(tspOutput(:,1) == fullPath(i,1) & tspOutput(:,2) == fullPath(i,2),2));
         if ~isempty(indOfTSPOutputPassed)
             tspOutputPassed(indOfTSPOutputPassed) = 1;
             tspOutputPassedOrder(tspCounter) = indOfTSPOutputPassed;
             tspCounter = tspCounter + 1;
-            disp(['fullpath ind: ' num2str(i)])
-            disp(['tspOutput ind: ' num2str(indOfTSPOutputPassed)])
+            %disp(['fullpath ind: ' num2str(i)])
+            %disp(['tspOutput ind: ' num2str(indOfTSPOutputPassed)])
             if all(tspOutputPassed)
                 newPath = fullPath(1:i,:);
                 tspOutput = tspOutput(tspOutputPassedOrder,:);
-                disp('Passed all billboards in tspOutput')
+                %disp('Passed all billboards in tspOutput')
                 return
             end
         end

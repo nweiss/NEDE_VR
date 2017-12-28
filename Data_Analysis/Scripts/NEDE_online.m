@@ -685,7 +685,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 else
                    oldPath = dlmread('../../NEDE_Game/NedeConfig/newCarPath.txt',',');
                 end
-                pathUpdated = runTag(classification,oldPath,counter_billboard-1,initialPath);
+                pathUpdated = runTag(classification,oldPath,counter_billboard-1,initialPath,Billboard.stimulus_type);
             
                 if pathUpdated == true
                     initialPath = false;

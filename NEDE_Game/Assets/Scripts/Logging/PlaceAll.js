@@ -103,7 +103,8 @@ var feedback_object : GameObject;
 var Startup_Object : GameObject;
 Startup_Object = GameObject.Find("StartupObject");
 var objectLocsFile : StreamWriter = new System.IO.StreamWriter("objectLocs.txt");
-public var feedbackMaterials : Material[];
+public var blueFeedbackMaterials : Material[];
+public var blackFeedbackMaterials : Material[];
 var Rend: Renderer;
 
 //=========================================================
@@ -681,11 +682,20 @@ function updateFeedback() {
 		line = sr.ReadLine();
 		objInd = 0;
 		while (line != null) {
-			interestScore = float.Parse(line);
+			row = ReadLog.splitString(line,",");
+			interestScore = float.Parse(row[0]);
+			classifierOutput = float.Parse(row[1]);
+			trueLabel = float.Parse(row[2]);
+
 			materialNo = Mathf.Round(5*interestScore);
 			feedbackObj = GameObject.Find("feedback_obj" + objInd);
 			rend = feedbackObj.GetComponent.<Renderer>();
-			rend.sharedMaterial = feedbackMaterials[materialNo];
+			if (classifierOutput == 0) { //For billboards that have NOT been passed yet
+				rend.sharedMaterial = blueFeedbackMaterials[materialNo];
+			}
+			else { // For billboards that have been passed
+				rend.sharedMaterial = blackFeedbackMaterials[materialNo];
+			}
 			line = sr.ReadLine();
 			objInd = objInd + 1;
 		}

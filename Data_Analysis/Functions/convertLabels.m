@@ -10,6 +10,6 @@ function newLabels = convertLabels(oldLabels)
 % - distractor = 0
 
 n = length(oldLabels);
-newLabels = nan(n,1);
+newLabels = -1*ones(n,1);
 newLabels(oldLabels == 1) = ones(sum(oldLabels == 1),1);
 newLabels(oldLabels == 2) = zeros(sum(oldLabels==2),1);
