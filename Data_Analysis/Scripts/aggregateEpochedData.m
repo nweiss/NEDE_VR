@@ -8,8 +8,8 @@ DATA_VERSION_NO = '3';
 SAVE_ON = true;
 
 % Number of blocks recorded for each subject
-BLOCKS = [13,9,0,13,16,33,23,42,0,39,40,0,40];
 SUBJECTS = [10,11];
+BLOCKS = [13,9,0,13,16,33,23,42,0,39,40,0,40];
 
 % Delete trials with extreme head rotation values. This happens occasionaly
 % on the last stimulus of a block if the game exits before the end of the
@@ -39,7 +39,7 @@ target_category_agg = [];
 subject = [];
 block = [];
 
-for i = 1:max(SUBJECTS)% SUBJECTS
+for i = SUBJECTS
     for j = 1:BLOCKS(i)
         clear dwell_time
         clear eeg
@@ -53,6 +53,18 @@ for i = 1:max(SUBJECTS)% SUBJECTS
             'Data', ['epoched_v' DATA_VERSION_NO], ['subject_', num2str(i)],...
             ['s', num2str(i), '_b', num2str(j), '_epoched.mat']);
         load(LOAD_PATH);
+        
+        
+        % The first trial was way off for subject 11
+        if i == 11
+            EEG(:,:,1) = [];
+            head_rotation(1,:) = [];
+            pupil(1,:) = [];
+            stimulus_type(1) = [];
+            dwell_times(1) = [];
+            billboard_cat(1) = [];
+            target_category(1) = [];
+        end
         
         dwell_times_agg = cat(2, dwell_times_agg, dwell_times);
         EEG_agg = cat(3, EEG_agg, EEG);
@@ -73,14 +85,8 @@ end
 n_trials_before_pruning = length(stimulus_type_agg);
 disp(['Total trials before pruning: ' num2str(n_trials_before_pruning)])
 
-% For subject 11
-% EEG_agg(:,:,1) = [];
-% head_rotation_agg(1,:) = [];
-% pupil_agg(1,:) = [];
-% stimulus_type_agg(1) = [];
-% dwell_times_agg(1) = [];
-% billboard_cat_agg(1) = [];
-% target_category_agg(1) = [];
+% Convert any NaNs in the head rotation to 0's
+head_rotation_agg(isnan(head_rotation_agg))=0;
 
 %% Delete Trials with extreme head rotation values
 % on the last trial of a given block, occassionally, the last 300 ms or so
@@ -158,7 +164,7 @@ if SAVE_ON
 
     SAVE_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox',...
             'Data', ['training_v' DATA_VERSION_NO], 'training_data.mat');
-    save(SAVE_PATH, 'EEG', 'head_rotation', 'pupil', 'stimulus_type', 'dwell_times', 'billboard_cat', 'target_category', 'subject', 'block')
+    %save(SAVE_PATH, 'EEG', 'head_rotation', 'pupil', 'stimulus_type', 'dwell_times', 'billboard_cat', 'target_category', 'subject', 'block')
     disp('Data Saved')
 end
     
