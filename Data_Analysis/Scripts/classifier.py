@@ -9,7 +9,7 @@ sys.path.append('../liblsl-Python-1.11/liblsl-Python/pylsl')
 from pylsl import StreamInlet, resolve_byprop, StreamInfo, StreamOutlet
 sys.path.append('../../../EEGnet-VR')
 sys.path.append('../../../EEGnet-VR/weights/jenn')
-from EEGNet_no_eeg import EEGNet
+from EEGNet import EEGNet
 
 #SETTINGS
 SAVE_EPOCHED_DATA = False
@@ -48,7 +48,7 @@ target_cat = 0
 # Initialize Deep Learning
 np.random.seed(123)
 EEGnet = EEGNet(type= 'VR')
-EEGnet.model.load_weights('../../../EEGnet-VR/weights/jon/CombinedModelWeights_fold_no_eeg1.hf5')
+EEGnet.model.load_weights('../../../EEGnet-VR/weights/test/CombinedModelWeights_fold1.hf5')
 
 print("Now Receiving Data")
 print()
@@ -113,9 +113,9 @@ while True:
             dwell_trial = dwell_time[counter_epoch]
             dwell_trial = np.reshape(dwell_trial, (1,1,1))
 
-            weightsfilename = '../../../EEGnet-VR/weights/jon/CombinedModelWeights_fold_no_eeg1.hf5'
+            weightsfilename = '../../../EEGnet-VR/weights/test/CombinedModelWeights_fold1.hf5'
             EEGnet.model.load_weights(weightsfilename)
-            probs = EEGnet.model.predict([head_trial, pupil_trial, dwell_trial])
+            probs = EEGnet.model.predict([eeg_trial,head_trial, pupil_trial, dwell_trial])
             #probs = np.random.rand(1,2)
 
             pred_class = np.argmax(probs)
