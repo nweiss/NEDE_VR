@@ -4,37 +4,12 @@ clc; clear all; close all;
 
 %% Settings
 % Specify which systems are connected
-UNITY = true;
-PYTHON = true;
-EEG_connected = true;
-EYE_connected = true;
-SIMULATE_DATA = false;
-PCA_ICA = false;
-UPDATE_INTEREST_SPHERES = true;
-UPDATE_CAR_PATH = true;
-MARKER_STREAM = false; % Output event markers for BCI Lab
+nede_params;
 
-SAVE_RAW_DATA = false;
-SAVE_EPOCHED_DATA = false;
-PLOTS = false;
-
-EPOCHED_VERSION = 7; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '11';
-BLOCK = '1'; % First block in batch
-nBLOCKS = 1; % Number of blocks to do in batch
-
-EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 
 %% Set Paths
 % Add path to where functions livec
-function_path = fullfile('..','Functions');
-addpath(function_path);
-
-tag_path = fullfile('..','..','TAG');
-addpath(tag_path);
-
-tsp_path = fullfile('..','..','TSP');
-addpath(tsp_path);
+nede_filepaths;
 
 %% Load Data
 if (EEG_connected||EYE_connected) == false
@@ -42,7 +17,7 @@ if (EEG_connected||EYE_connected) == false
     % are being streamed
     LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',...
         'raw_mat', ['subject_', SUBJECT_ID],...
-        ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
+        ['s', SUBJECT_ID, '_b', BATCH, '_raw.mat']);
     load(LOAD_PATH);
     % Because billboard_id can be zero, make default nan when no billboard
     % onscreen. Correct for old data collection system where default was 0.
@@ -57,57 +32,8 @@ if PCA_ICA
     load(dimred_path);
 end
 
-%% Set Constants
-smi_pixels_y = 1010; % Range of SMI eye-tracker in the y-direction (in pixels)
-oculus_fov = 106.188; % Field of view of oculus in degrees (Unity lists it)
-oculus_pixels_x = 1915; % Pixels in oculus in the horizontal direction, found empirically
-allowedDiscrepency = 6*oculus_pixels_x/oculus_fov; % Number of degrees to expand the bounding box of billboards for fixation
-
-n_chan = 64;
-freq_eye = 60;
-freq_unity = 75;
-freq_eeg = 2048;
-n_block_start_cues = 0;
-
-% Thresholds for pupil radius to be considered valid data
-blink_upper_thresh = 3.2;
-blink_lower_thresh = 1.3;
-
-% Dimensions of the chunks we are pushing to python
-dimChunkForPython = [66, 385];
-
-initialPath = true;
-
 %% Create Filters
-% High Pass Filter for EEG
-Fstop = .5;         % Stopband Frequency
-Fpass = 3;           % Passband Frequency
-Astop = 60;          % Stopband Attenuation (dB)
-Apass = 1;           % Passband Ripple (dB)
-match = 'passband';  % Band to match exactly
-h_hp  = fdesign.highpass(Fstop, Fpass, Astop, Apass, 2048);
-Hd_hp = design(h_hp, 'cheby2', 'MatchExactly', match);
-%fvtool(Hd_hp)
-
-% Low Pass Filter for EEG
-Fpass = 50;          % Passband Frequency
-Fstop = 55;          % Stopband Frequency
-Apass = 1;           % Passband Ripple (dB)
-Astop = 60;          % Stopband Attenuation (dB)
-match = 'stopband';  % Band to match exactly
-h_lp  = fdesign.lowpass(Fpass, Fstop, Apass, Astop, freq_eeg);
-Hd_lp = design(h_lp, 'cheby2', 'MatchExactly', match);
-%fvtool(Hd_lp)
-
-% Low Pass Filter for pupil data
-Fpass = 3;          % Passband Frequency
-Fstop = 6;          % Stopband Frequency
-Apass = 1;           % Passband Ripple (dB)
-Astop = 60;          % Stopband Attenuation (dB)
-match = 'stopband';  % Band to match exactly
-h_lp_pupil  = fdesign.lowpass(Fpass, Fstop, Apass, Astop, freq_eye);
-Hd_lp_pupil = design(h_lp_pupil, 'cheby2', 'MatchExactly', match);
-%fvtool(Hd_lp_pupil)
+set_filter_params;
 
 %% Instantiate the Data Streams
 % Load LSL libraries
@@ -118,11 +44,11 @@ if UNITY||EEG_connected||EYE_connected||PYTHON
 end
 
 % Create outlet from matlab to unity
-if UPDATE_INTEREST_SPHERES || UPDATE_CAR_PATH
+%if UPDATE_INTEREST_SPHERES || UPDATE_CAR_PATH
     info = lsl_streaminfo(lib, 'Matlab->Unity', 'Markers', 3, 0,'cf_float32','sdfwerr32432');
     outlet_matlabToUnity = lsl_outlet(info);
     disp('Opened outlet: Matlab -> Unity');
-end
+%end
 
 % Create outlet from matlab to python
 if PYTHON
@@ -140,8 +66,8 @@ if MARKER_STREAM
 end
 
 %% Outer loop - Iterate over blocks of the experiment
-for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
-    BLOCK = num2str(block_counter);
+for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
+    BATCH = num2str(block_counter);
 
     % Create Inlets
     % Create inlet from eyetracker to matlab
@@ -201,7 +127,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         startCuePython = zeros(dimChunkForPython);
         startCuePython(end,end) = 1;
         startCuePython(end,end-2) = str2num(SUBJECT_ID);
-        startCuePython(end,end-1) = str2num(BLOCK);
+        startCuePython(end,end-1) = str2num(BATCH);
         startCuePython(end,end-3) = nBLOCKS;
         
         % Push data to python
@@ -216,7 +142,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         disp('Opened inlet: Python->Matlab');
     end
     
-    disp(['***STARTING BLOCK ', BLOCK,'***']);
+    disp(['***STARTING BLOCK ', BATCH,'***']);
     fprintf('\n')
 
     %% Initialize Data Storage Variables
@@ -250,7 +176,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     eye_data = zeros(37, floor(block_duration * freq_eye));
     eye_ts = zeros(1, floor(block_duration * freq_eye));
 
-    % unity_data (15xtime array)
+    % unity_data (17xtime array)
     %   1) x-position of left edge of billboard (oculus pixels)
     %   2) y-position of bottom edge of billboard (oculus pixels)
     %   3) billboard width (oculus pixels)
@@ -342,7 +268,6 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
     counter_eeg = 1;
     first_frame_unity = true;
     first_frame_eye = true;
-    first_frame_eeg = true;
     
     tic
     while true
@@ -463,14 +388,9 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
                 [a, b] = inlet_eeg.pull_sample(0);
                 if ~isempty(a) %if Unity has moved to a new frame
                     update_eeg = true;
-                    if ~first_frame_eeg
-                       counter_eeg = counter_eeg + 1;
-                   end
-                   if first_frame_eeg
-                        first_frame_eeg = false;
-                   end   
                     eeg_data(:,counter_eeg) = a(2:65);
                     eeg_ts(counter_eeg) = b;
+                    counter_eeg = counter_eeg + 1;
                end
            end
         end
@@ -767,7 +687,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         eeg.time_series = [zeros(1, length(eeg.time_stamps)); eeg.time_series];
         
         % Check that you are not overwriting existing data file
-        SAVE_PATH_RAW = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat', ['subject_' SUBJECT_ID], ['s', SUBJECT_ID, '_b', BLOCK, '_raw.mat']);
+        SAVE_PATH_RAW = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','raw_mat', ['subject_' SUBJECT_ID], ['s', SUBJECT_ID, '_b', BATCH, '_raw.mat']);
         if exist(SAVE_PATH_RAW)==2
             error('Data file already exists. Update subject and block number.') 
         end
@@ -801,7 +721,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         target_category = target_category * ones(1,length(stimulus_type));
         
         % Check that you are not overwriting existing data file
-        SAVE_PATH_EPOCHED = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)], ['subject_' SUBJECT_ID], ['s', SUBJECT_ID,'_b' BLOCK, '_epoched.mat']); %the path to where the raw data is stored.
+        SAVE_PATH_EPOCHED = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['epoched_v' num2str(EPOCHED_VERSION)], ['subject_' SUBJECT_ID], ['s', SUBJECT_ID,'_b' BATCH, '_epoched.mat']); %the path to where the raw data is stored.
         if exist(SAVE_PATH_EPOCHED)==2
             error('Data file already exists. Update subject and block number.') 
         end
@@ -844,7 +764,7 @@ for block_counter = str2double(BLOCK):str2double(BLOCK)+nBLOCKS-1
         disp(['WARNING: Getting extreme EEG values on ', num2str(length(extreme_chans)) ' channels. Check signal.']) 
     end
     
-    disp(['***COMPLETED BLOCK NUMBER ', BLOCK,'***'])
+    disp(['***COMPLETED BLOCK NUMBER ', BATCH,'***'])
     fprintf('\n')
     
 end
