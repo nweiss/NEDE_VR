@@ -1,12 +1,15 @@
 % Run VR NEDE experiment
 % Neil Weiss
-clc; clear all; close all;
-
+clc; clear all;
+test = 0;
 %% Settings
 % Specify which systems are connected
 nede_params;
 
-
+true_pos = 0;
+false_pos = 0;
+true_neg = 0;
+false_neg = 0;
 %% Set Paths
 % Add path to where functions livec
 nede_filepaths;
@@ -154,7 +157,7 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
         trials_per_block = 20;
     else
         block_duration = 300;
-        trials_per_block = 100;
+        trials_per_block = trials_per_block_closed_loop;
     end
     
     left_border = zeros(1, ceil(block_duration * freq_eye)); % boarder of the onscreen billboard in pixels in oculus space, in eye-time
@@ -302,6 +305,7 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
 
         %% Simulate the data streams in real time (only for matlab only simulation mode)
         if ~EEG_connected && ~EYE_connected % (Matlab only mode)
+ 
            % Eye Stream
            if counter_eye < max_frame_eye
                if time > eye.time_stamps(counter_eye)
@@ -385,12 +389,13 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
         % EEG Stream
         if EEG_connected
             if ~first_frame_unity
-                [a, b] = inlet_eeg.pull_sample(0);
+                [a, b] = inlet_eeg.pull_chunk();
                 if ~isempty(a) %if Unity has moved to a new frame
                     update_eeg = true;
-                    eeg_data(:,counter_eeg) = a(2:65);
-                    eeg_ts(counter_eeg) = b;
-                    counter_eeg = counter_eeg + 1;
+                    eeg_data(:,counter_eeg:counter_eeg+length(b)-1) = a(2:65,:);
+                    eeg_ts(counter_eeg:counter_eeg+length(b)-1) = b;
+                    counter_eeg = counter_eeg + length(b);
+                    test = test +1;
                end
            end
         end
@@ -441,7 +446,17 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
                 dwell_times(counter_epoch) = Fixation.stop_times(counter_epoch) - Fixation.start_times(counter_epoch);
 
                 % Epoch the head tracking data
-                oculus_rotation = unity_data(9, Fixation.start_frame_unity(counter_epoch)-round(.5*freq_unity):Fixation.start_frame_unity(counter_epoch)+round(1.5*freq_unity));
+                
+                oculus_indices = Fixation.start_frame_unity(counter_epoch)-round(.5*freq_unity):Fixation.start_frame_unity(counter_epoch)+round(1.5*freq_unity);
+                
+                
+                % TODO: this doesn't actually fix the error. Oculus data
+                % will be inaccurate when triggered
+                if oculus_indices(1) < 1
+                    oculus_indices = oculus_indices + (1 - oculus_indices(1));
+                end
+                
+                oculus_rotation = unity_data(9, oculus_indices);
                 car_rotation = unity_data(12, Fixation.start_frame_unity(counter_epoch)-round(.5*freq_unity):Fixation.start_frame_unity(counter_epoch)+round(1.5*freq_unity));
                 
                 % Epoch the eeg data
@@ -589,13 +604,17 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
                 
                 % Print classification updates
                 if classification(counter_epoch-1,2) == 1 && Billboard.stimulus_type(counter_epoch-1) == 1
+                    true_pos = true_pos + 1;
                     disp('Target correctly identified')
                 elseif classification(counter_epoch-1,2) == 0 && Billboard.stimulus_type(counter_epoch-1) == 1
                     disp('Target classified as non-target')
+                    false_neg = false_neg + 1;
                 elseif classification(counter_epoch-1,2) == 1 && Billboard.stimulus_type(counter_epoch-1) == 2
                     disp('non-Target classified as target')
+                    false_pos = false_pos + 1;
                 elseif classification(counter_epoch-1,2) == 0 && Billboard.stimulus_type(counter_epoch-1) == 2
                     disp('non-Target correctly classified')
+                    true_neg = true_neg + 1;
                 end
                     
                 
@@ -605,7 +624,7 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
                 else
                    oldPath = dlmread('../../NEDE_Game/NedeConfig/newCarPath.txt',',');
                 end
-                pathUpdated = runTag(classification,oldPath,counter_billboard-1,initialPath,Billboard.stimulus_type);
+                pathUpdated = runTag(classification,oldPath,counter_billboard-1,initialPath,Billboard.stimulus_type,tag_threshold);
             
                 if pathUpdated == true
                     initialPath = false;

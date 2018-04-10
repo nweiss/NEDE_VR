@@ -6,15 +6,28 @@ close all; clc; clear all;
 
 % Settings
 DATA_VERSION_NO = '3'; % version of the stored data
-SAVE_ON = false;
+SAVE_ON = true;
 INCLUDE_HR_ICA = true; % Append head rotation data to EEG data prior to taking ICA
+RUN_PCA = true;
 
-SAVE_PATH = fullfile('..','Data', 'training_v5', 'training_data_neilpilot_EEG_ICs.mat');
-LOAD_PATH = fullfile('..','Data',['training_v',DATA_VERSION_NO],'training_data_neil_pilot.mat');
+SAVE_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data', 'training_v5', 'training_data_neilpilot_EEG_ICs_75percent_only.mat');
+LOAD_PATH = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',['training_v',DATA_VERSION_NO],'training_data_neil_pilot.mat');
 load(LOAD_PATH);
 
-RUN_PCA = false;
+train_end_ind = 480;
+stiumulus_type = [];
+target_category = [];
+subject = [];
 
+EEG_test = EEG(:,:,train_end_ind+1:end);
+dwell_times_test = dwell_times(1,train_end_ind+1:end);
+pupil_test = pupil(train_end_ind+1:end,:);
+head_rotation_test = head_rotation(train_end_ind+1:end,:);
+
+EEG = EEG(:,:,1:train_end_ind);
+dwell_times = dwell_times(1,1:train_end_ind);
+pupil = pupil(1:train_end_ind,:);
+head_rotation = head_rotation(1:train_end_ind,:);
 
 % For the neil-pilot, head-rotation contains NaN's and -180's when the game
 % has already been finished. Convert the -180's to NaNs.

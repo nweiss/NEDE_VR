@@ -38,15 +38,14 @@ var turnRadius = 5;
 public var points: Vector2[]; //array of points to hit
 var isObjectPoint: float[];
 public var iPoint = 0;
-//var iEndPoint = 20;
-var nObjToSee = 40;
+var iEndPoint = 7;
+var nObjToSee = 20;
 var nObjects = 0;
 var distanceTraveled = 0.0; // used to gauge distance between leader and follower
 // private variables
 private var moveTarget: Vector3;
 private var spinSpeed : float; //horizontal rotation, in deg/s?
 private var angleBetween; //angle between current view and target direction
-
 // NEIL
 private var passFinalObjTime = Mathf.Infinity;
 
@@ -59,6 +58,9 @@ static var GOSTRAIGHT = 0;
 static var TURNRIGHT = 1;
 static var TURNLEFT = 2;
 
+//SETTING for closed loop
+var update_car_path_on = true;
+var initial_path = true;
 
 // function that takes the Route file and turns it into procesessed waypoints
 function ParseRouteFile(pointsFilename: String) {
@@ -135,14 +137,16 @@ function StartRoute(iStartPoint: int) {
 	
 	//DetermineiEndPoint
 	iPoint = iStartPoint;
-//	iEndPoint = iPoint;
-//	var nObjSeen = 0;
-//	while ((nObjSeen<nObjToSee) && (iEndPoint<points.length-1)) {
-//		iEndPoint++;
-//		nObjSeen += isObjectPoint[iEndPoint];
-//	}
-//	iEndPoint++; // Add one point that we won't actually pass
-	
+	if (!update_car_path_on) {
+		iEndPoint = iPoint;
+		var nObjSeen = 0;
+		while ((nObjSeen<nObjToSee) && (iEndPoint<points.length-1)) {
+			iEndPoint++;
+			nObjSeen += isObjectPoint[iEndPoint];
+		}
+		iEndPoint++; // Add one point that we won't actually pass
+	}
+	Debug.Log("startRoute iEndPoint: " + iEndPoint);
 	//move camera to starting point
 	transform.position = Vector3(points[iPoint].x, transform.position.y, points[iPoint].y);
 	iPoint++; //initiate next point as target of first movement
@@ -173,12 +177,18 @@ function Update () {
 		if (nextMove==GOSTRAIGHT) {
 			if (Vector3.Distance(transform.position,moveTarget) < (Time.deltaTime * moveSpeed)) { // if we're almost on top of the target
 				iPoint++;
-				//Debug.Log("iPoint: " + iPoint);
-
 				//if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
-				if (iPoint>=(points.length-1)) { //if this is the end of our path
-					Debug.Log("Passed final obj at time: " + Time.time);
-					EndWalk();
+				//if (update_car_path_on && !initial_path) {
+				if (update_car_path_on) {
+						if (iPoint>=(points.length-1)) { //if this is the end of our path
+						Debug.Log("Passed final obj at time: " + Time.time);
+						EndWalk();
+					}
+				} else {
+					if (iPoint>=iEndPoint) { //if this is the end of our path
+						Debug.Log("Passed final obj at time: " + Time.time);
+						EndWalk();
+					}
 				}
 				// update moves
 				currentMove = nextMove;
@@ -191,9 +201,19 @@ function Update () {
 				iPoint++;
 				// check for end of walk
 				//if (iPoint==iEndPoint || iPoint>=(points.length-1)) { //if this is the end of our path
-				if (iPoint>=(points.length-1)) { //if this is the end of our path
-					EndWalk();
+
+				//if (update_car_path_on && !initial_path) {
+				if (update_car_path_on) {
+					if (iPoint>=(points.length-1)) { //if this is the end of our path
+						EndWalk();
+					}
+				} else {
+					if (iPoint==iEndPoint) { //if this is the end of our path
+						EndWalk();
+					}
 				}
+
+
 				// update moves
 				currentMove = nextMove;
 				nextMove = FindNextMove(points[iPoint-1], points[iPoint], points[iPoint+1]);
@@ -253,6 +273,7 @@ function FindNextMove(currentPosition: Vector2, currentTarget: Vector2, nextTarg
 
 // Finish the walk by either ending the level or destroying the script
 function EndWalk() {
+	Debug.Log("End walk called");
 	// The delay allows the unity level to continue until after the full epoch of head-rotation data is collected. For VR version only.
 	yield WaitForSeconds(.9);
 	if (transform.root.gameObject.name == "Cams") { // Only have EndLevel called by RobotWalk on the cams object, not by the RobotWalk on the leader object

@@ -9,14 +9,17 @@ UPDATE_INTEREST_SPHERES = true;
 UPDATE_CAR_PATH = true;    
 MARKER_STREAM = false; % Output event markers for BCI Lab
 
-SAVE_RAW_DATA = false;
-SAVE_EPOCHED_DATA = false;
+SAVE_RAW_DATA = true;
+SAVE_EPOCHED_DATA = true;
 PLOTS = false;
 
 EPOCHED_VERSION = 8; % Different versions of the data. Look at readme in data folder for details.
-SUBJECT_ID = '19';
-BATCH = '21'; % First block in batch
+SUBJECT_ID = '99';
+BATCH = '33'; % First block in batch
 nBLOCKS = 20; % Number of blocks to do in batch
+trials_per_block_closed_loop = 100;
+
+tag_threshold = 0.1;
 
 EEG_WARNING_THRESHOLD = 500; % threshold for EEG data overwhich matlab will warn you that you are getting extreme values
 

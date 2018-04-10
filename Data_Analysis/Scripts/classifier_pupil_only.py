@@ -12,22 +12,15 @@ sys.path.append('../../../EEGnet-VR/weights/jenn')
 from EEGNet import EEGNet
 
 #SETTINGS
-pupil_only = True
-SAVE_EPOCHED_DATA = True
-SAVE_CLASSIFICATION_DATA = True
+SAVE_EPOCHED_DATA = False
+SAVE_CLASSIFICATION_DATA = False
 SINGLE_TRIAL_FEEDBACK = True
-BLOCK_PREDICTION = True
-EPOCH_VERSION = '8'
+BLOCK_PREDICTION = False
+EPOCH_VERSION = '6'
 TRAINING = False
 NUM_OF_BILLBOARDS = 100
-weight_filepath = '../../../EEGnet-VR/weights/subj99/PupilModelWeights_fold1.hf5'
-thresh = 0.5
+weight_filepath = '../../../EEGnet-VR/weights/subj19/CombinedModelWeights_fold1.hf5'
 
-# Initialize Deep Learning
-np.random.seed(123)
-EEGnet = EEGNet(type= 'VR')
-classifier_model = EEGnet.pupil_model
-classifier_model.load_weights(weight_filepath)
 # Create LSL outlet
 info = StreamInfo('Python->Matlab', 'classifications', 3)
 outlet = StreamOutlet(info)
@@ -52,7 +45,10 @@ classification = np.zeros((NUM_OF_BILLBOARDS))
 confidence = np.zeros((NUM_OF_BILLBOARDS))
 target_cat = 0
 
-
+# Initialize Deep Learning
+np.random.seed(123)
+EEGnet = EEGNet(type= 'VR')
+EEGnet.model.load_weights(weight_filepath)
 
 print("Now Receiving Data")
 print()
@@ -117,18 +113,11 @@ while True:
             dwell_trial = dwell_time[counter_epoch]
             dwell_trial = np.reshape(dwell_trial, (1,1,1))
 
-            classifier_model.load_weights(weight_filepath)
-            if pupil_only:
-                probs = classifier_model.predict([pupil_trial[:,60:,:]])
-            else:
-                probs = classifier_model.predict([eeg_trial,head_trial, pupil_trial, dwell_trial])
+            EEGnet.model.load_weights(weight_filepath)
+            probs = EEGnet.model.predict([eeg_trial,head_trial, pupil_trial, dwell_trial])
             #probs = np.random.rand(1,2)
 
-
-            if probs[0,1] > thresh:
-                pred_class = 1
-            else:
-                pred_class = 0
+            pred_class = np.argmax(probs)
             confidence = probs[0,1]
             stream_out = [billboard_id[counter_epoch], pred_class, confidence]
 

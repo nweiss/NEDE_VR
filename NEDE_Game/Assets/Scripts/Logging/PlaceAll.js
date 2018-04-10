@@ -30,7 +30,7 @@ var categories : String[]; //the possible target/distractor categories
 var categoryState : int[];
 var categoryPrevalence : float[];
 var nCategories = 0;
-var nObjToSee = 40;
+var nObjToSee = 20;
 //WHERE
 var locations = "Locations"; //the Tag that contains the available target locations
 var objectSize = 2.0; //(Approximate) height of targets/distractors in meters
@@ -53,7 +53,7 @@ private var WhiteSquare : Texture2D;
 private var BlackSquare : Texture2D;
 
 //To Dish Out to Other Scripts
-var isActiveSession = 1; //use ArrowControl (1) or RobotWalk (0)?
+var isActiveSession = 0; //use ArrowControl (1) or RobotWalk (0)?
 var moveSpeed = 5.0; //for ArrowControl/RobotWalk
 var spinSpeed = 50.0; //for ArrowControl
 var offset_x = 50; //for eyelink calibration
@@ -83,8 +83,8 @@ private var zoomFactor = 1.5;  // % of speed during acceleration
 //Neil
 //========================================================
 // SETTINGS
-public var interest_spheres_on = true; // Toggle on and off the "interest spheres" that appear in the birds-eye-view
-public var update_car_path_on = true; // Toggle on and off whether the carpath will be updated by the TSP
+var interest_spheres_on = true; // Toggle on and off the "interest spheres" that appear in the birds-eye-view
+var update_car_path_on = true; // Toggle on and off whether the carpath will be updated by the TSP // 
 
 var isTarget = 0.0;
 var Outlet;
@@ -168,11 +168,19 @@ function Start () {
 		walkScript = gameObject.AddComponent(RobotWalk); //moves the user passively on a predefined path
 		yield walkScript.ParseRouteFile("NedeConfig/" + Application.loadedLevelName + ".txt"); //wait for this to finish before moving on
 		walkScript.nObjToSee = nObjToSee;
+		update_car_path_on = true;
+		Debug.Log("update_car_path_on at the start: " + update_car_path_on);
+
+		walkScript.update_car_path_on = update_car_path_on;
 		var lastOkStartPoint = walkScript.FindLastOkStartPoint();
-		startPoint = Mathf.FloorToInt(Random.Range(0,lastOkStartPoint)); //choose starting point randomly between 0 and lastOkStartPt-1
-		Debug.Log("randomized start point: " + startPoint);
-		startPoint = 0;
-		Debug.Log("actual start point: " + startPoint);
+		if (update_car_path_on) {
+			startPoint = 0;
+			Debug.Log("actual start point: " + startPoint);
+		} else {
+			startPoint = Mathf.FloorToInt(Random.Range(0,lastOkStartPoint)); //choose starting point randomly between 0 and lastOkStartPt-1
+			Debug.Log("randomized start point: " + startPoint);
+		}
+
 		walkScript.moveSpeed = moveSpeed;
 		walkScript.StartRoute(startPoint);
 		if (presentationType==Constants.FOLLOW) {
@@ -526,8 +534,10 @@ function LateUpdate() {
 		if (unity_from_matlab[0] == -2) {
 			delay(2.5);
 			walkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+			//walkScript.initial_path = false;
 			if (presentationType==Constants.FOLLOW) {
 				leaderWalkScript.ParseRouteFile("NedeConfig/newCarPath.txt");
+				//leaderWalkScript.initial_path = false;
 			}
 			Debug.Log("Cue to update path received");
 		}

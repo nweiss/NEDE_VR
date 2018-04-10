@@ -3,11 +3,10 @@
 %
 % NW - 12/19/2017
 
-clear all; clc; close all;
 
 %% SETTINGS
-DATA_VERSION_NO = '6';
-SUBJECT = 13;
+DATA_VERSION_NO = '8';
+subjects = [15];
 scalpmap_ylims = [-15,15]; % ylimits for the plotting of the eeg data
 scalpmap_times = [-400,0,200,300,350,400,500,600,700]; % timepoints at which the eeg data is plotted
 
@@ -20,8 +19,9 @@ dependancies_path = fullfile('..','Dependancies');
 addpath(dependancies_path);
 
 %% LOAD DATA
-data_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','training_v6','training_data.mat');
+data_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','training_v8','training_data_15closed.mat');
 load(data_path);
+
 
 %% Initialize Variables
 % Set the indices of the relevant channels
@@ -30,35 +30,59 @@ CzInd = 48;
 PzInd = 31;
 
 %% Select data from subject defined in settings
-billboard_cat = billboard_cat{SUBJECT};
-block = block{SUBJECT};
-dwell_times = dwell_times{SUBJECT};
-eeg = EEG{SUBJECT};
-head_rotation = head_rotation{SUBJECT};
-pupil = pupil{SUBJECT};
-stimulus_type = convertLabels(stimulus_type{SUBJECT});
+% billboard_cat = billboard_cat{SUBJECT};
+% block = block{SUBJECT};
+% dwell_times = dwell_times{SUBJECT};
+% eeg = EEG{SUBJECT};
+% head_rotation = head_rotation{SUBJECT};
+% pupil = pupil{SUBJECT};
+% stimulus_type = convertLabels(stimulus_type{SUBJECT});
+
+data_subj = data{subjects(1)};
+
+billboard_cat = data_subj.stimulus_type;
+dwell_times = data_subj.dwell_times;
+eeg = data_subj.EEG;
+head_rotation = data_subj.head_rotation;
+pupil = data_subj.pupil;
+stimulus_type = data_subj.stimulus_type;
+
+
+for i=2:length(subjects)
+    data_subj = data{subjects(i)};
+    billboard_cat = cat(2,billboard_cat,data_subj.stimulus_type,1);
+    dwell_times = cat(2,dwell_times,data_subj.dwell_times);
+    eeg = cat(3,eeg,data_subj.EEG);
+    head_rotation = cat(1,head_rotation,data_subj.head_rotation);
+    pupil = cat(1,pupil,data_subj.pupil);
+    stimulus_type = cat(2,stimulus_type,data_subj.stimulus_type);
+end
 
 %% EEG plot
+
+eeg = EEG_temp;
+
+
 FzTargMean = mean(eeg(FzInd,:,stimulus_type == 1),3);
 FzTargStd = std(eeg(FzInd,:,stimulus_type == 1),[],3);
 FzTargStdError = FzTargStd ./ sqrt(sum(stimulus_type == 1));
-FzDistMean = mean(eeg(FzInd,:,stimulus_type == 0),3);
-FzDistStd = std(eeg(FzInd,:,stimulus_type == 0),[],3);
-FzDistStdError = FzDistStd ./ sqrt(sum(stimulus_type == 0));
+FzDistMean = mean(eeg(FzInd,:,stimulus_type == 2),3);
+FzDistStd = std(eeg(FzInd,:,stimulus_type == 2),[],3);
+FzDistStdError = FzDistStd ./ sqrt(sum(stimulus_type == 2));
 
 CzTargMean = mean(eeg(CzInd,:,stimulus_type == 1),3);
 CzTargStd = std(eeg(CzInd,:,stimulus_type == 1),[],3);
 CzTargStdError = CzTargStd ./ sqrt(sum(stimulus_type == 1));
-CzDistMean = mean(eeg(CzInd,:,stimulus_type == 0),3);
-CzDistStd = std(eeg(CzInd,:,stimulus_type == 0),[],3);
-CzDistStdError = CzDistStd ./ sqrt(sum(stimulus_type == 0));
+CzDistMean = mean(eeg(CzInd,:,stimulus_type == 2),3);
+CzDistStd = std(eeg(CzInd,:,stimulus_type == 2),[],3);
+CzDistStdError = CzDistStd ./ sqrt(sum(stimulus_type == 2));
 
 PzTargMean = mean(eeg(PzInd,:,stimulus_type == 1),3);
 PzTargStd = std(eeg(PzInd,:,stimulus_type == 1),[],3);
 PzTargStdError = PzTargStd ./ sqrt(sum(stimulus_type == 1));
-PzDistMean = mean(eeg(PzInd,:,stimulus_type == 0),3);
-PzDistStd = std(eeg(PzInd,:,stimulus_type == 0),[],3);
-PzDistStdError = PzDistStd ./ sqrt(sum(stimulus_type == 0));
+PzDistMean = mean(eeg(PzInd,:,stimulus_type == 2),3);
+PzDistStd = std(eeg(PzInd,:,stimulus_type == 2),[],3);
+PzDistStdError = PzDistStd ./ sqrt(sum(stimulus_type == 2));
 
 x_axis = linspace(-500, 1000, length(FzTargMean));
 figure
@@ -91,18 +115,28 @@ legend([H5.mainLine, H6.mainLine], 'distractors','targets', 'Location', 'SouthWe
 
 %% Pupil plot
 
+size ( pupil )
+
+pupil_baseline = mean(pupil(:,1:60),2);
+
+pupil = pupil - pupil_baseline;
+
 pupilTargMean = mean(pupil(stimulus_type == 1,:),1);
+pupilTargMedian = median(pupil(stimulus_type == 1,:),1);
 pupilTargStd = std(pupil(stimulus_type == 1,:),1);
 pupilTargStdError = pupilTargStd ./ sqrt(sum(stimulus_type == 1));
-pupilDistMean = mean(pupil(stimulus_type == 0,:),1);
-pupilDistStd = std(pupil(stimulus_type == 0,:),1);
-pupilDistStdError = pupilDistStd ./ sqrt(sum(stimulus_type == 1));
+pupilDistMean = mean(pupil(stimulus_type == 2,:),1);
+pupilDistMedian = median(pupil(stimulus_type == 2,:),1);
+pupilDistStd = std(pupil(stimulus_type == 2,:),1);
+pupilDistStdError = pupilDistStd ./ sqrt(sum(stimulus_type == 2));
 
 x_axis = linspace(-1000,3000,length(pupilTargMean));
-subplot(3,2,2)
+%subplot(3,2,2)
 H7 = shadedErrorBar(x_axis,pupilDistMean,pupilDistStd,'b',1);
 hold on
-H8 = shadedErrorBar(x_axis,pupilTargMean,pupilTargStd,'-r',1);
+plot(x_axis,pupilDistMedian,'-.b')
+H8 = shadedErrorBar(x_axis,pupilTargMean,pupilTargStd,'r',1);
+plot(x_axis,pupilTargMedian,'-.r')
 legend([H7.mainLine, H8.mainLine], 'distractors', 'targets', 'Location', 'SouthWest')
 title('Pupil Dilation')
 xlabel('Time (ms)')
@@ -111,7 +145,7 @@ ylabel('Deviation of radius from baseline (mm)')
 %% dwell time plot
 
 nTargets = sum(stimulus_type == 1);
-nDistractors = sum(stimulus_type == 0);
+nDistractors = sum(stimulus_type == 2);
 dtTargCumhist = zeros(1,1500);
 dtDistCumhist = zeros(1,1500);
 for i = 1:1500 % cycle through 1500 ms
@@ -145,9 +179,9 @@ legend('Distractors','Targets', 'Location', 'SouthWest')
 HRTargMean = mean(abs(head_rotation(stimulus_type == 1,:)),1);
 HRTargStd = std(abs(head_rotation(stimulus_type == 1,:)),1);
 HRTargStdError = HRTargStd ./ sqrt(sum(stimulus_type == 1));
-HRDistMean = mean(abs(head_rotation(stimulus_type == 0,:)),1);
-HRDistStd = std(abs(head_rotation(stimulus_type == 0,:)),1);
-HRDistStdError = HRDistStd ./ sqrt(sum(stimulus_type == 0));
+HRDistMean = mean(abs(head_rotation(stimulus_type == 2,:)),1);
+HRDistStd = std(abs(head_rotation(stimulus_type == 2,:)),1);
+HRDistStdError = HRDistStd ./ sqrt(sum(stimulus_type == 2));
 
 x_axis = linspace(-500,1500,length(HRTargMean));
 subplot(3,2,4)
@@ -165,8 +199,8 @@ set(gcf,'Color','w');
 % Take only the real part of the EEG
 eeg = real(eeg);
 
-EEGTarg = pop_importdata('setname','targets','data',eeg(:,:,stimulus_type==1), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
-EEGDist = pop_importdata('setname','distractors','data',eeg(:,:,stimulus_type==0), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
+EEGTarg = pop_importdata('setname','targets','data',eeg(:,:,stimulus_type==2), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
+EEGDist = pop_importdata('setname','distractors','data',eeg(:,:,stimulus_type==1), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
 ALLEEG = [EEGTarg, EEGDist];
 
 pop_comperp(ALLEEG,1,1,2,'ylim',ylim,'title','Targets-Distractors','addavg','on','subavg','on');

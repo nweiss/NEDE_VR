@@ -2,13 +2,14 @@
 clear all; clc; close all;
 
 %% Settings
-SUBJECT = 13;
-nBLOCKS = 40;
+SUBJECT = 15;
+nBLOCKS = 30;
 REM_BAD_CHANS = true;
 BAD_CHAN_THRESH = 5; % Threshold for identifying bad channels. In Standard Deviations.
 REM_COMPS_FROM_ROTATION = true;
 thresh = 2; % Threshold for correlation between IC and rotation over which to remove component. In Z-score.
-SAVE_ON = true;
+SAVE_WEIGHTS_ON = true;
+SAVE_TRAINING_DATA_ON = true;
 
 %% Constants
 freq_eeg = 2048;
@@ -95,8 +96,9 @@ end
     
 % Find PCA_coeff and clean with PCA
 [pca_coeff,pca_score,latent] = pca(EEGlab.data','NumComponents',20);
-tmp = pca_coeff' * EEGlab.data;
-EEGlab.data = pca_coeff * tmp;
+% tmp = pca_coeff' * EEGlab.data;
+% EEGlab.data = pca_coeff * tmp;
+EEGlab.data = pca_coeff' * EEGlab.data;
 
 % Find ICAweights and ICAsphere
 EEGlab = pop_runica(EEGlab,'icatype','runica');
@@ -110,12 +112,11 @@ if REM_COMPS_FROM_ROTATION
     % version.
     [ICs_from_HR,cov_HRpos_IC_zscore, cov_HRvel_IC_zscore, cov_HRacc_IC_zscore] = findICsFromRotation(EEGlab.icaact, headRotationAgg, thresh);
 end
-
-if SAVE_ON
+if SAVE_WEIGHTS_ON
     icaweights = EEGlab.icaweights;
     icasphere = EEGlab.icasphere;
     save_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data',...
-        'dim_red_params',['s',num2str(SUBJECT),'_dimredparams.mat']);
+        'dim_red_params',['s',num2str(SUBJECT),'_dimredparams_30_blocks_dim_reduction.mat']);
     save(save_path,'pca_coeff','icaweights','icasphere','badChanInd','ICs_from_HR','cov_HRpos_IC_zscore', 'cov_HRvel_IC_zscore', 'cov_HRacc_IC_zscore');
     
 end

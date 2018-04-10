@@ -2,12 +2,12 @@ close all; clc; clear all;
 
 % Settings
 DATA_VERSION_NO = '4'; % version of the stored data
-SUBJECTS = [1,2,4,5,6,7,8];
+SUBJECTS = [1,2,4,5,6,7,8,9,10,11,12,13,14];
 
 DIR = fullfile('..','..','NEDE_Online');
 addpath(genpath(DIR));
 
-savepath = fullfile('..','Data', 'training_v5', 'training_data.mat');
+savepath = fullfile('..',,'..','..',,'Dropbox','NEDE_Dropbox','Data', 'training_v9', 'training_data.mat');
 
 % Format the data so each subject has its own cell array
 LOAD_PATH = fullfile('..','Data',['training_v',DATA_VERSION_NO],'training_data.mat');
@@ -15,7 +15,7 @@ load(LOAD_PATH);
 [billboard_cat,block,dwell_times,EEG,head_rotation,pupil,stimulus_type,subject,target_category] = array2cell(billboard_cat,block,dwell_times,EEG,head_rotation,pupil,stimulus_type,subject,target_category);
 
 EEG_ic = cell(max(SUBJECTS),1);
-for subj = SUBJECTS;
+for subj = SUBJECTS
 % Reshape the EEG data such that each trial is appended to the previous
 % trial along the dimension of time
 EEG_reshaped = [];

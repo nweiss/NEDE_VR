@@ -8,3 +8,5 @@ addpath(tag_path);
 
 tsp_path = fullfile('..','..','TSP');
 addpath(tsp_path);
+
+addpath(fullfile('..','MATLAB Viewer'));

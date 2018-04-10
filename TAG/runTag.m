@@ -1,4 +1,4 @@
-function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,initialPath,trueLabels)
+function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,initialPath,trueLabels,thresh)
     
     % Inputs:
     %   - initialPath: a flag indicating if the car is still following the
@@ -18,7 +18,6 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     
     % Thresh is the threshold for the TAG output [0-1] that we use to
     % define a high probability target for the TSP
-    thresh = 0.05;
     
     %% DEBUG RUNTAG
     file1 = fullfile('..','..','TAG','classifier_outputs.mat');
@@ -56,7 +55,7 @@ function [pathUpdated] = runTag(classifier_outputs,oldPath, numBillboardsSeen,in
     target_indices = classifier_outputs(:,2) == 1;
     distractor_indices = classifier_outputs(:,2) == 0;
     iTargets = classifier_outputs(target_indices,1);
-    iDistractors = classifier_outputs(distractor_indices,2) == 0;
+    iDistractors = classifier_outputs(distractor_indices,1);
     confidence_scores = classifier_outputs(:,3);
     
     % Run TAG to use CV to identify target billboards that haven't yet been
