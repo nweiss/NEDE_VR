@@ -1,11 +1,11 @@
 
-
-% nBLOCKS = [42,39,40,37,40,40,40,40,26,30];
-% SUBJECT = [8,10,11,15,16,17,18,19,99,100];
 % 
-nBLOCKS = [42];
-SUBJECT = [15];
-
+% nBLOCKS = [42,39,40,37,12,40,40,40,40,26,30,33];
+% SUBJECT = [8,10,11,15,152,16,17,18,19,99,100];
+% 
+nBLOCKS = [20];
+SUBJECT = [20];
+% 
 
 data = cell(1,max(SUBJECT));
 for i = 1:length(SUBJECT)
@@ -34,4 +34,4 @@ for i = 1:length(SUBJECT)
     end
 end
 
-save_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','training_v8','training_data_15closed.mat')
+save_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','training_v8','training_data_20.mat')

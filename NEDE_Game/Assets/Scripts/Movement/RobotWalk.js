@@ -59,7 +59,7 @@ static var TURNRIGHT = 1;
 static var TURNLEFT = 2;
 
 //SETTING for closed loop
-var update_car_path_on = true;
+var update_car_path_on = false;
 var initial_path = true;
 
 // function that takes the Route file and turns it into procesessed waypoints

@@ -83,8 +83,8 @@ private var zoomFactor = 1.5;  // % of speed during acceleration
 //Neil
 //========================================================
 // SETTINGS
-var interest_spheres_on = true; // Toggle on and off the "interest spheres" that appear in the birds-eye-view
-var update_car_path_on = true; // Toggle on and off whether the carpath will be updated by the TSP // 
+var interest_spheres_on = false; // Toggle on and off the "interest spheres" that appear in the birds-eye-view
+var update_car_path_on = false; // Toggle on and off whether the carpath will be updated by the TSP // 
 
 var isTarget = 0.0;
 var Outlet;
@@ -168,7 +168,7 @@ function Start () {
 		walkScript = gameObject.AddComponent(RobotWalk); //moves the user passively on a predefined path
 		yield walkScript.ParseRouteFile("NedeConfig/" + Application.loadedLevelName + ".txt"); //wait for this to finish before moving on
 		walkScript.nObjToSee = nObjToSee;
-		update_car_path_on = true;
+		update_car_path_on = false;
 		Debug.Log("update_car_path_on at the start: " + update_car_path_on);
 
 		walkScript.update_car_path_on = update_car_path_on;

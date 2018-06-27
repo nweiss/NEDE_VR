@@ -87,7 +87,11 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
     if EEG_connected
         result_eeg = {};
         while isempty(result_eeg) 
-            result_eeg = lsl_resolve_byprop(lib,'name','BioSemi'); 
+            if strcmp(EEG_TYPE, 'Biosemi')
+                result_eeg = lsl_resolve_byprop(lib,'name','BioSemi'); 
+            elseif strcmp(EEG_TYPE,'ABM')
+                result_eeg = lsl_resolve_byprop(lib,'name','BAlert X24');
+            end
             disp('Waiting for: EEG stream');
         end
         inlet_eeg = lsl_inlet(result_eeg{1});
@@ -168,7 +172,11 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
     stop_time_live_stream = inf;
 
     % EEG data (64xtime array)
-    eeg_data = zeros(64, floor(block_duration * freq_eeg));
+    if EEG_TYPE == 'ABM'
+        eeg_data = zeros(24, floor(block_duration * freq_eeg));
+    elseif EEG_TYPE == 'Biosemi'
+        eeg_data = zeros(64, floor(block_duration * freq_eeg));
+    end
     eeg_ts = zeros(1, floor(block_duration) * freq_eeg);
 
     % eye_data (37xtime array)
@@ -229,13 +237,23 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
     Pupil.processed = zeros(trials_per_block, round(freq_eye * 4) + 1);
     Pupil.baseline = 0;
 
-    EEG = struct;
-    EEG.epoch = zeros(64, round(freq_eeg * 1.5) + 1);
-    EEG.baseline = zeros(64, 1);
-    EEG.filtered = zeros(64, round(freq_eeg * 1.5) + 1);
-    EEG.downsampled = zeros(64, floor(size(EEG.filtered, 2)/8)+1);
-    EEG.processed = zeros(64, size(EEG.downsampled, 2), trials_per_block);
-    EEG.time_epoch = linspace(-500, 1000, size(EEG.downsampled, 2));
+    if strcmp(EEG_TYPE, 'Biosemi')
+        EEG = struct;
+        EEG.epoch = zeros(64, round(freq_eeg * 1.5) + 1);
+        EEG.baseline = zeros(64, 1);
+        EEG.filtered = zeros(64, round(freq_eeg * 1.5) + 1);
+        EEG.downsampled = zeros(64, floor(size(EEG.filtered, 2)/8)+1);
+        EEG.processed = zeros(64, size(EEG.downsampled, 2), trials_per_block);
+        EEG.time_epoch = linspace(-500, 1000, size(EEG.downsampled, 2));
+    elseif strcmp(EEG_TYPE, 'ABM')
+        EEG = struct;
+        EEG.epoch = zeros(24, round(freq_eeg * 1.5) + 1);
+        EEG.baseline = zeros(24, 1);
+        EEG.filtered = zeros(24, round(freq_eeg * 1.5) + 1);
+        EEG.downsampled = zeros(24, round(freq_eeg * 1.5) + 1); %there is no downsampling needed
+        EEG.processed = zeros(24, size(EEG.downsampled, 2), trials_per_block);
+        EEG.time_epoch = linspace(-500, 1000, size(EEG.downsampled, 2));
+    end
 
     % Constants for maltab only mode that are reset for each block
     if ~EEG_connected && ~EYE_connected % (Matlab only mode)
@@ -342,7 +360,11 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
            if floor(timer) ~= prev_sec % Stream it in in 1 sec blocks
                if batch_eeg_end <= max_frame_eeg
                     update_eeg = true;
-                    eeg_data(:, batch_eeg_start:batch_eeg_end) = eeg.time_series(2:65,batch_eeg_start:batch_eeg_end);
+                    if strcmp(EEG_TYPE, 'Biosemi')
+                        eeg_data(:, batch_eeg_start:batch_eeg_end) = eeg.time_series(2:65,batch_eeg_start:batch_eeg_end);
+                    elseif strcmp(EEG_TYPE,'ABM')
+                        eeg_data(:, batch_eeg_start:batch_eeg_end) = eeg.time_series(2:25,batch_eeg_start:batch_eeg_end);
+                    end
                     eeg_ts(batch_eeg_start:batch_eeg_end) = eeg.time_stamps(batch_eeg_start:batch_eeg_end);
                     batch_eeg_start = batch_eeg_start + round(freq_eeg);
                     batch_eeg_end = batch_eeg_end + round(freq_eeg);
@@ -392,7 +414,11 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
                 [a, b] = inlet_eeg.pull_chunk();
                 if ~isempty(a) %if Unity has moved to a new frame
                     update_eeg = true;
-                    eeg_data(:,counter_eeg:counter_eeg+length(b)-1) = a(2:65,:);
+                    if strcmp(EEG_TYPE, 'Biosemi')
+                        eeg_data(:,counter_eeg:counter_eeg+length(b)-1) = a(2:65,:);
+                    elseif strcmp(EEG_TYPE,'ABM')
+                        eeg_data(:,counter_eeg:counter_eeg+length(b)-1) = a(1:24,:);
+                    end
                     eeg_ts(counter_eeg:counter_eeg+length(b)-1) = b;
                     counter_eeg = counter_eeg + length(b);
                     test = test +1;
@@ -508,8 +534,11 @@ for block_counter = str2double(BATCH):str2double(BATCH)+nBLOCKS-1
                 % HP and LP Filter. Downsample.
                 EEG.filtered = filtfilt(Hd_hp.sosMatrix, Hd_hp.ScaleValues, EEG.epoch')';
                 EEG.filtered = filtfilt(Hd_lp.sosMatrix, Hd_lp.ScaleValues, EEG.filtered')';
-                EEG.downsampled = downsample(EEG.filtered', 8)';
-
+                if strcmp(EEG_TYPE, 'Biosemi')
+                    EEG.downsampled = downsample(EEG.filtered', 8)';
+                elseif strcmp(EEG_TYPE,'ABM')
+                    EEG.downsampled = EEG.filtered;
+                end
                 % Clean using PCA and ICA
                 if PCA_ICA
                     EEG.pcs = pca_coeff'*EEG.downsampled;

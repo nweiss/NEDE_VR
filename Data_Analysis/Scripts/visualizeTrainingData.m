@@ -6,7 +6,7 @@
 
 %% SETTINGS
 DATA_VERSION_NO = '8';
-subjects = [15];
+subjects = [20];
 scalpmap_ylims = [-15,15]; % ylimits for the plotting of the eeg data
 scalpmap_times = [-400,0,200,300,350,400,500,600,700]; % timepoints at which the eeg data is plotted
 
@@ -19,15 +19,15 @@ dependancies_path = fullfile('..','Dependancies');
 addpath(dependancies_path);
 
 %% LOAD DATA
-data_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','training_v8','training_data_15closed.mat');
+data_path = fullfile('..','..','..','Dropbox','NEDE_Dropbox','Data','training_v8','training_data_20.mat');
 load(data_path);
 
 
 %% Initialize Variables
 % Set the indices of the relevant channels
-FzInd = 38;
-CzInd = 48;
-PzInd = 31;
+FzInd = 13;
+CzInd = 19;
+PzInd = 11;
 
 %% Select data from subject defined in settings
 % billboard_cat = billboard_cat{SUBJECT};
@@ -59,8 +59,6 @@ for i=2:length(subjects)
 end
 
 %% EEG plot
-
-eeg = EEG_temp;
 
 
 FzTargMean = mean(eeg(FzInd,:,stimulus_type == 1),3);
@@ -122,6 +120,7 @@ pupil_baseline = mean(pupil(:,1:60),2);
 pupil = pupil - pupil_baseline;
 
 pupilTargMean = mean(pupil(stimulus_type == 1,:),1);
+
 pupilTargMedian = median(pupil(stimulus_type == 1,:),1);
 pupilTargStd = std(pupil(stimulus_type == 1,:),1);
 pupilTargStdError = pupilTargStd ./ sqrt(sum(stimulus_type == 1));
@@ -131,7 +130,7 @@ pupilDistStd = std(pupil(stimulus_type == 2,:),1);
 pupilDistStdError = pupilDistStd ./ sqrt(sum(stimulus_type == 2));
 
 x_axis = linspace(-1000,3000,length(pupilTargMean));
-%subplot(3,2,2)
+subplot(3,2,2)
 H7 = shadedErrorBar(x_axis,pupilDistMean,pupilDistStd,'b',1);
 hold on
 plot(x_axis,pupilDistMedian,'-.b')
@@ -197,12 +196,12 @@ set(gcf,'Color','w');
 
 %% Scalp Maps
 % Take only the real part of the EEG
-eeg = real(eeg);
-
-EEGTarg = pop_importdata('setname','targets','data',eeg(:,:,stimulus_type==2), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
-EEGDist = pop_importdata('setname','distractors','data',eeg(:,:,stimulus_type==1), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
-ALLEEG = [EEGTarg, EEGDist];
-
-pop_comperp(ALLEEG,1,1,2,'ylim',ylim,'title','Targets-Distractors','addavg','on','subavg','on');
-pop_topoplot(EEGTarg,1,scalpmap_times,'Targets',0,0,'maplimits',scalpmap_ylims);
-pop_topoplot(EEGDist,1,scalpmap_times,'Distractors',0,0,'maplimits',scalpmap_ylims);
+% eeg = real(eeg);
+% 
+% EEGTarg = pop_importdata('setname','targets','data',eeg(:,:,stimulus_type==2), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
+% EEGDist = pop_importdata('setname','distractors','data',eeg(:,:,stimulus_type==1), 'chanlocs','biosemi_64.ced','xmin',-.5,'srate',256);
+% ALLEEG = [EEGTarg, EEGDist];
+% 
+% pop_comperp(ALLEEG,1,1,2,'ylim',ylim,'title','Targets-Distractors','addavg','on','subavg','on');
+% pop_topoplot(EEGTarg,1,scalpmap_times,'Targets',0,0,'maplimits',scalpmap_ylims);
+% pop_topoplot(EEGDist,1,scalpmap_times,'Distractors',0,0,'maplimits',scalpmap_ylims);
