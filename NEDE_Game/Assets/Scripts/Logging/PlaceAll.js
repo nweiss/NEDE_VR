@@ -35,6 +35,7 @@ var nObjToSee = 20;
 var locations = "Locations"; //the Tag that contains the available target locations
 var objectSize = 2.0; //(Approximate) height of targets/distractors in meters
 var distanceToLeader = 2.5; // How far away from the camera should the target pop up?
+var posOffset = 0.6; //How center the object is to the center of the alley
 //WHEN
 var trialTime = Mathf.Infinity;
 var minBrakeDelay = 3.0; //min time between brake events
@@ -658,6 +659,13 @@ function PlaceObjects(objectLocsFile: StreamWriter) {
 		//Decide if there will be an object at this location
 		var isObject = (Random.value < objectPrevalence); //There is an objectPrevalence*100% chance that each location will contain an object
 		if (isObject) {
+			print("positions: ");
+			print(positions);
+			if (Mathf.Round(positions[i][0] - Mathf.Floor(positions[i][0]))) {
+				positions[i][0] = positions[i][0] + posOffset;
+			} else {
+				positions[i][0] = positions[i][0] - posOffset;
+			}
 			//Place a target or distractor
 			newObject = PlaceObject(positions[i],rotations[i],cubbies[i],"Stationary", objectLocsFile, i);
 		}
